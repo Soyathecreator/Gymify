@@ -188,16 +188,11 @@ rect.recharts-rectangle[class*="background"]{fill:transparent!important;opacity:
       height: 100%;
       overflow: hidden;
     }
-    /* Fix black bar at top - fill entire screen background */
+    /* Fix black bar - fill entire screen */
     body {
       background: #0d0d0d !important;
     }
-    /* Safe area support */
-    :root {
-      --sat: env(safe-area-inset-top);
-      --sab: env(safe-area-inset-bottom);
-    }
-    /* iOS status bar area */
+    /* iOS status bar area top */
     body::before {
       content: '';
       display: block;
@@ -206,6 +201,20 @@ rect.recharts-rectangle[class*="background"]{fill:transparent!important;opacity:
       position: fixed;
       top: 0; left: 0; right: 0;
       z-index: 9999;
+    }
+    /* Tab bar background extends into bottom safe area */
+    body::after {
+      content: '';
+      display: block;
+      height: env(safe-area-inset-bottom);
+      background: #1c1c1e;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 49;
+    }
+    /* Dark mode tab bar color */
+    @media (prefers-color-scheme: dark) {
+      body::after { background: #1c1c1e; }
     }
   </style>
 </head>
@@ -1598,7 +1607,7 @@ function App() {
   const S = {
     app: { fontFamily: "-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif", background: t.bg, color: t.text, height: "100dvh", maxHeight: "100dvh", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column", overflow: "hidden" },
     scroll: { overflowY: "auto", flex: 1, paddingBottom: "calc(90px + env(safe-area-inset-bottom))", height: "100%" },
-    tabBar: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: t.card, borderTop: `1px solid ${t.border}`, display: "flex", padding: `8px 0 calc(max(20px, env(safe-area-inset-bottom)))`, zIndex: 50 },
+    tabBar: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: t.card, borderTop: `1px solid ${t.border}`, display: "flex", padding: `8px 0 calc(max(20px, env(safe-area-inset-bottom)))`, zIndex: 50, boxShadow: `0 100px 0 100px ${t.card}` },
     tabBtn: (active) => ({ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, border: "none", background: "none", cursor: "pointer", padding: "5px 0", color: active ? t.a : t.muted, transition: "color .15s" }),
     tabLbl: { fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase" },
     card: { background: t.card, borderRadius: 18, padding: 18, marginBottom: 12, border: `1px solid ${t.border}` },
@@ -2423,6 +2432,7 @@ ReactDOM.render(/* @__PURE__ */ React.createElement(App, null), document.getElem
 
 })();
 </script>
+
 
 
 
