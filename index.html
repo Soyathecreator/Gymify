@@ -831,10 +831,10 @@ function Auth({ onLogin }) {
     loading ? "\u23F3 Bitte warten\u2026" : mode === "login" ? "Anmelden \u2192" : "Account erstellen \u2192"
   )));
 }
-function ProfileModal({ t, S, cu: cu2, level, li, xpProg, xp, onClose, onDeleted, onUsernameChanged }) {
-  const [ud, setUd] = useState(() => sto.get("gym_users", {})[cu2] || {});
+function ProfileModal({ t, S, cu, level, li, xpProg, xp, onClose, onDeleted, onUsernameChanged }) {
+  const [ud, setUd] = useState(() => sto.get("gym_users", {})[cu] || {});
   const [editEmail, setEditEmail] = useState(ud.email || "");
-  const [editDisplay, setEditDisplay] = useState(() => (sto.get("gym_users", {})[cu2] || {}).displayName || cu2);
+  const [editDisplay, setEditDisplay] = useState(() => (sto.get("gym_users", {})[cu] || {}).displayName || cu);
   const [newUsername, setNewUsername] = useState("");
   const [op, setOp] = useState("");
   const [np, setNp] = useState("");
@@ -851,7 +851,7 @@ function ProfileModal({ t, S, cu: cu2, level, li, xpProg, xp, onClose, onDeleted
   };
   const save = (patch) => {
     const us = sto.get("gym_users", {});
-    Object.assign(us[cu2], patch);
+    Object.assign(us[cu], patch);
     sto.set("gym_users", us);
     setUd((u) => __spreadValues(__spreadValues({}, u), patch));
   };
@@ -888,7 +888,7 @@ function ProfileModal({ t, S, cu: cu2, level, li, xpProg, xp, onClose, onDeleted
       flash("Mind. 3 Zeichen erforderlich.", false);
       return;
     }
-    if (nu === cu2) {
+    if (nu === cu) {
       flash("Das ist bereits dein Name.", false);
       return;
     }
@@ -897,15 +897,15 @@ function ProfileModal({ t, S, cu: cu2, level, li, xpProg, xp, onClose, onDeleted
       flash("Nutzername bereits vergeben.", false);
       return;
     }
-    const oldPrefix = `gym_${cu2}_`;
+    const oldPrefix = `gym_${cu}_`;
     const newPrefix = `gym_${nu}_`;
     Object.keys(localStorage).filter((k) => k.startsWith(oldPrefix)).forEach((k) => {
       const v = localStorage.getItem(k);
       localStorage.setItem(k.replace(oldPrefix, newPrefix), v);
       localStorage.removeItem(k);
     });
-    us[nu] = __spreadProps(__spreadValues({}, us[cu2]), { lastUsernameChange: todayStr() });
-    delete us[cu2];
+    us[nu] = __spreadProps(__spreadValues({}, us[cu]), { lastUsernameChange: todayStr() });
+    delete us[cu];
     sto.set("gym_users", us);
     sto.set("gym_currentUser", nu);
     flash("Nutzername ge\xE4ndert! App l\xE4dt neu\u2026");
@@ -948,10 +948,10 @@ function ProfileModal({ t, S, cu: cu2, level, li, xpProg, xp, onClose, onDeleted
       return;
     }
     const us = sto.get("gym_users", {});
-    delete us[cu2];
+    delete us[cu];
     sto.set("gym_users", us);
     sto.set("gym_currentUser", null);
-    Object.keys(localStorage).filter((k) => k.startsWith(`gym_${cu2}_`)).forEach((k) => localStorage.removeItem(k));
+    Object.keys(localStorage).filter((k) => k.startsWith(`gym_${cu}_`)).forEach((k) => localStorage.removeItem(k));
     onDeleted();
   };
   const i2 = { background: t.card2, border: `1px solid ${t.border}`, borderRadius: 10, padding: "10px 14px", fontSize: 14, color: t.text, width: "100%", outline: "none", boxSizing: "border-box" };
@@ -961,7 +961,7 @@ function ProfileModal({ t, S, cu: cu2, level, li, xpProg, xp, onClose, onDeleted
       setTimeout(onClick, 60);
     }
   }, style: __spreadValues({ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", cursor: disabled ? "not-allowed" : "pointer", fontWeight: 700, opacity: disabled ? 0.45 : 1 }, style) }, children);
-  return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 300, bg: "rgba(0,0,0,.6)", style: { background: t.card, padding: 24, maxHeight: "92vh", animation: "sheetUp .34s cubic-bezier(.32,.72,0,1)" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800 } }, "Mein Konto"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 22, color: t.muted }))), msg.t && /* @__PURE__ */ React.createElement("div", { style: { background: msg.ok ? "#22c55e22" : "#ef444422", border: `1px solid ${msg.ok ? "#22c55e44" : "#ef444444"}`, borderRadius: 9, padding: "8px 13px", marginBottom: 11, fontSize: 13, color: msg.ok ? "#22c55e" : "#ef4444" } }, msg.t), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", cursor: "pointer", marginBottom: 8 }, onClick: () => fRef.current.click() }, /* @__PURE__ */ React.createElement(Av, { ud, size: 78, accent: t.a }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", bottom: 0, right: 0, background: t.a, borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Icon, { name: "camera", size: 13, color: "#fff" }))), /* @__PURE__ */ React.createElement("input", { ref: fRef, type: "file", accept: "image/*", style: { display: "none" }, onChange: onFile }), /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 17 } }, ud.isDev ? /* @__PURE__ */ React.createElement(DevName, { n: ud.displayName || cu2 }) : ud.isGymBro ? /* @__PURE__ */ React.createElement(GymBroName, { n: ud.displayName || cu2 }) : /* @__PURE__ */ React.createElement("span", null, ud.displayName || cu2)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: t.muted, marginTop: 2 } }, "@", cu2)), /* @__PURE__ */ React.createElement("div", { style: __spreadProps(__spreadValues({}, S.card), { background: `linear-gradient(135deg,${li.color}18,${t.card})`, border: `1px solid ${li.color}44`, marginBottom: 13 }) }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, color: li.color, fontSize: 14, display: "flex", alignItems: "center", gap: 5 } }, /* @__PURE__ */ React.createElement(Icon, { name: "bolt", size: 13, color: li.color }), "Level ", level), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: t.muted } }, li.title)), /* @__PURE__ */ React.createElement("div", { style: { background: t.border, borderRadius: 6, height: 6, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: `linear-gradient(90deg,${t.a},${t.b})`, width: `${xpProg / XP_LV * 100}%`, height: "100%", borderRadius: 6 } })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, marginTop: 3, textAlign: "right" } }, xpProg, "/", XP_LV, " XP \xB7 ", xp, " total")), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 6, textTransform: "uppercase" } }, "Anzeigename"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { flex: 1 }), placeholder: "Anzeigename", value: editDisplay, onChange: (e) => setEditDisplay(e.target.value) }), /* @__PURE__ */ React.createElement(GB, { onClick: saveDisplay, style: { background: t.a, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 13 } }, "Speichern"))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 6, textTransform: "uppercase" } }, "E-Mail"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { flex: 1 }), type: "email", placeholder: "E-Mail (optional)", value: editEmail, onChange: (e) => setEditEmail(e.target.value) }), /* @__PURE__ */ React.createElement(GB, { onClick: saveEmail, style: { background: t.a, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 13 } }, "Speichern"))), /* @__PURE__ */ React.createElement("div", { style: { background: t.card2, borderRadius: 14, padding: 14, border: `1px solid ${t.border}`, marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 6, textTransform: "uppercase" } }, "@Nutzername \xE4ndern"), canRename ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { flex: 1 }), placeholder: `Neu (aktuell: @${cu2})`, value: newUsername, onChange: (e) => setNewUsername(e.target.value), onKeyDown: (e) => e.key === "Enter" && changeUsername() }), /* @__PURE__ */ React.createElement(GB, { onClick: changeUsername, style: { background: t.a, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 13 } }, "OK")) : /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: t.muted, display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement(Icon, { name: "timer", size: 14, color: t.muted }), "N\xE4chste \xC4nderung in ", daysLeft, " Tag(en) m\xF6glich."), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: t.muted, marginTop: 6 } }, "Kann nur alle 14 Tage ge\xE4ndert werden.")), /* @__PURE__ */ React.createElement("div", { style: { background: t.card2, borderRadius: 14, padding: 14, border: `1px solid ${t.border}`, marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 9, textTransform: "uppercase" } }, "Passwort \xE4ndern"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 7 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative" } }, /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { paddingRight: 42 }), type: showPw ? "text" : "password", placeholder: "Altes Passwort", value: op, onChange: (e) => setOp(e.target.value) }), /* @__PURE__ */ React.createElement("button", { onClick: () => setShowPw((p) => !p), style: { position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: showPw ? "eyeOff" : "eye", size: 16, color: t.muted }))), /* @__PURE__ */ React.createElement("input", { style: i2, type: showPw ? "text" : "password", placeholder: "Neues Passwort", value: np, onChange: (e) => setNp(e.target.value) }), /* @__PURE__ */ React.createElement("input", { style: i2, type: showPw ? "text" : "password", placeholder: "Best\xE4tigen", value: np2, onChange: (e) => setNp2(e.target.value) }), /* @__PURE__ */ React.createElement(GB, { onClick: changePw, style: { background: t.a, borderRadius: 10, padding: "11px", fontSize: 14, color: "#fff" } }, "Passwort \xE4ndern"))), /* @__PURE__ */ React.createElement("div", { style: { background: t.card2, borderRadius: 14, padding: 14, border: `1px solid ${t.border}`, marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 7, textTransform: "uppercase" } }, "\u{1F511} Code einl\xF6sen"), ud.isDev || ud.isGymBro ? /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 13, color: ud.isDev ? "#00ffaa" : "#f5a623" } }, ud.isDev ? "\u2B50 Dev-Status aktiv" : "\u{1F3C6} Gym Bro aktiv", /* @__PURE__ */ React.createElement("button", { onClick: () => {
+  return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 300, bg: "rgba(0,0,0,.6)", style: { background: t.card, padding: 24, maxHeight: "92vh", animation: "sheetUp .34s cubic-bezier(.32,.72,0,1)" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800 } }, "Mein Konto"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 22, color: t.muted }))), msg.t && /* @__PURE__ */ React.createElement("div", { style: { background: msg.ok ? "#22c55e22" : "#ef444422", border: `1px solid ${msg.ok ? "#22c55e44" : "#ef444444"}`, borderRadius: 9, padding: "8px 13px", marginBottom: 11, fontSize: 13, color: msg.ok ? "#22c55e" : "#ef4444" } }, msg.t), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", cursor: "pointer", marginBottom: 8 }, onClick: () => fRef.current.click() }, /* @__PURE__ */ React.createElement(Av, { ud, size: 78, accent: t.a }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", bottom: 0, right: 0, background: t.a, borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Icon, { name: "camera", size: 13, color: "#fff" }))), /* @__PURE__ */ React.createElement("input", { ref: fRef, type: "file", accept: "image/*", style: { display: "none" }, onChange: onFile }), /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 17 } }, ud.isDev ? /* @__PURE__ */ React.createElement(DevName, { n: ud.displayName || cu }) : ud.isGymBro ? /* @__PURE__ */ React.createElement(GymBroName, { n: ud.displayName || cu }) : /* @__PURE__ */ React.createElement("span", null, ud.displayName || cu)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: t.muted, marginTop: 2 } }, "@", cu)), /* @__PURE__ */ React.createElement("div", { style: __spreadProps(__spreadValues({}, S.card), { background: `linear-gradient(135deg,${li.color}18,${t.card})`, border: `1px solid ${li.color}44`, marginBottom: 13 }) }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, color: li.color, fontSize: 14, display: "flex", alignItems: "center", gap: 5 } }, /* @__PURE__ */ React.createElement(Icon, { name: "bolt", size: 13, color: li.color }), "Level ", level), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: t.muted } }, li.title)), /* @__PURE__ */ React.createElement("div", { style: { background: t.border, borderRadius: 6, height: 6, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: `linear-gradient(90deg,${t.a},${t.b})`, width: `${xpProg / XP_LV * 100}%`, height: "100%", borderRadius: 6 } })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, marginTop: 3, textAlign: "right" } }, xpProg, "/", XP_LV, " XP \xB7 ", xp, " total")), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 6, textTransform: "uppercase" } }, "Anzeigename"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { flex: 1 }), placeholder: "Anzeigename", value: editDisplay, onChange: (e) => setEditDisplay(e.target.value) }), /* @__PURE__ */ React.createElement(GB, { onClick: saveDisplay, style: { background: t.a, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 13 } }, "Speichern"))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 6, textTransform: "uppercase" } }, "E-Mail"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { flex: 1 }), type: "email", placeholder: "E-Mail (optional)", value: editEmail, onChange: (e) => setEditEmail(e.target.value) }), /* @__PURE__ */ React.createElement(GB, { onClick: saveEmail, style: { background: t.a, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 13 } }, "Speichern"))), /* @__PURE__ */ React.createElement("div", { style: { background: t.card2, borderRadius: 14, padding: 14, border: `1px solid ${t.border}`, marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 6, textTransform: "uppercase" } }, "@Nutzername \xE4ndern"), canRename ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { flex: 1 }), placeholder: `Neu (aktuell: @${cu})`, value: newUsername, onChange: (e) => setNewUsername(e.target.value), onKeyDown: (e) => e.key === "Enter" && changeUsername() }), /* @__PURE__ */ React.createElement(GB, { onClick: changeUsername, style: { background: t.a, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 13 } }, "OK")) : /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: t.muted, display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement(Icon, { name: "timer", size: 14, color: t.muted }), "N\xE4chste \xC4nderung in ", daysLeft, " Tag(en) m\xF6glich."), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: t.muted, marginTop: 6 } }, "Kann nur alle 14 Tage ge\xE4ndert werden.")), /* @__PURE__ */ React.createElement("div", { style: { background: t.card2, borderRadius: 14, padding: 14, border: `1px solid ${t.border}`, marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 9, textTransform: "uppercase" } }, "Passwort \xE4ndern"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 7 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative" } }, /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { paddingRight: 42 }), type: showPw ? "text" : "password", placeholder: "Altes Passwort", value: op, onChange: (e) => setOp(e.target.value) }), /* @__PURE__ */ React.createElement("button", { onClick: () => setShowPw((p) => !p), style: { position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: showPw ? "eyeOff" : "eye", size: 16, color: t.muted }))), /* @__PURE__ */ React.createElement("input", { style: i2, type: showPw ? "text" : "password", placeholder: "Neues Passwort", value: np, onChange: (e) => setNp(e.target.value) }), /* @__PURE__ */ React.createElement("input", { style: i2, type: showPw ? "text" : "password", placeholder: "Best\xE4tigen", value: np2, onChange: (e) => setNp2(e.target.value) }), /* @__PURE__ */ React.createElement(GB, { onClick: changePw, style: { background: t.a, borderRadius: 10, padding: "11px", fontSize: 14, color: "#fff" } }, "Passwort \xE4ndern"))), /* @__PURE__ */ React.createElement("div", { style: { background: t.card2, borderRadius: 14, padding: 14, border: `1px solid ${t.border}`, marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 7, textTransform: "uppercase" } }, "\u{1F511} Code einl\xF6sen"), ud.isDev || ud.isGymBro ? /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 13, color: ud.isDev ? "#00ffaa" : "#f5a623" } }, ud.isDev ? "\u2B50 Dev-Status aktiv" : "\u{1F3C6} Gym Bro aktiv", /* @__PURE__ */ React.createElement("button", { onClick: () => {
     save({ isDev: false, isGymBro: false });
   }, style: { marginLeft: 10, fontSize: 11, background: "none", border: "none", cursor: "pointer", color: t.muted, textDecoration: "underline" } }, "entfernen")) : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { flex: 1 }), placeholder: "Code eingeben\u2026", value: code, onChange: (e) => setCode(e.target.value), onKeyDown: (e) => e.key === "Enter" && redeemCode() }), /* @__PURE__ */ React.createElement(GB, { onClick: redeemCode, style: { background: t.a, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 13 } }, "OK"))), !confDel ? /* @__PURE__ */ React.createElement(GB, { onClick: () => setConfDel(true), style: { width: "100%", background: "none", border: "1px solid #ef444444", borderRadius: 12, padding: "12px", fontSize: 14, color: "#ef4444", marginBottom: 10 } }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 15, color: "#ef4444" }), "Konto l\xF6schen") : /* @__PURE__ */ React.createElement("div", { style: { background: "#ef444413", border: "1px solid #ef444444", borderRadius: 14, padding: 14, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#ef4444", marginBottom: 9 } }, "\u26A0\uFE0F Wirklich l\xF6schen? Alle Daten gehen verloren!"), /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { marginBottom: 8 }), type: "password", placeholder: "Passwort best\xE4tigen", value: delPw, onChange: (e) => setDelPw(e.target.value) }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement(GB, { onClick: delAccount, style: { flex: 1, background: "#ef4444", borderRadius: 10, padding: "11px", color: "#fff", fontSize: 14 } }, "L\xF6schen"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
     setConfDel(false);
@@ -984,7 +984,7 @@ const streakLost = (completed) => {
   }
   return true;
 };
-function StreakModal({ t, S, completed, cu: cu2, onClose }) {
+function StreakModal({ t, S, completed, cu, onClose }) {
   const streak = calcStreak(completed);
   const lost = streakLost(completed);
   const totalDays = Object.keys(completed).length;
@@ -1024,24 +1024,6 @@ function StreakModal({ t, S, completed, cu: cu2, onClose }) {
     (d, i) => d === null ? /* @__PURE__ */ React.createElement("div", { key: i }) : /* @__PURE__ */ React.createElement("div", { key: i, style: { aspectRatio: "1", borderRadius: 8, background: d.done ? "#22c55e22" : d.isToday ? t.a + "22" : t.bg, border: d.done ? `2px solid #22c55e` : d.isToday ? `2px solid ${t.a}` : `1px solid ${t.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: d.done || d.isToday ? 800 : 400, color: d.done ? "#22c55e" : d.isToday ? t.a : d.future ? t.border : t.muted } }, d.done ? "\u2713" : d.day)
   )))));
 }
-const getRequests = (user) => sto.get(`gym_${user}_freq`, []);
-const saveRequests = (user, list) => {
-  sto.set(`gym_${user}_freq`, list);
-  if (window._fbDb && user !== cu) {
-    (async () => {
-      try {
-        const usnap = await window._fbDb.collection("usernames").doc(user.toLowerCase()).get();
-        if (usnap.exists) {
-          const uid = usnap.data().uid;
-          const key = encodeURIComponent(`gym_${user}_freq`);
-          await window._fbDb.collection("users").doc(uid).collection("data").doc(key).set({ v: JSON.stringify(list) }, { merge: true });
-        }
-      } catch (e) {
-        console.warn("Cross-user write failed:", e);
-      }
-    })();
-  }
-};
 const getNameDisplay = (ud, username, t, size = "14px") => {
   if (ud.isDev) return /* @__PURE__ */ React.createElement(DevName, { n: username });
   if (ud.isGymBro) return /* @__PURE__ */ React.createElement(GymBroName, { n: username });
@@ -1058,175 +1040,250 @@ function FriendProfileModal({ t, S, username, onClose }) {
   const allDates = Object.keys(completed).sort();
   return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 400, bg: "rgba(0,0,0,.68)", style: { background: t.card, maxHeight: "92vh" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "0 24px 28px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", cursor: "pointer", padding: 4 } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 20, color: t.muted }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: 20 } }, /* @__PURE__ */ React.createElement(Av, { ud, size: 88, accent: t.a }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, fontSize: 19, fontWeight: 900 } }, getNameDisplay(ud, username, t, "19px")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: t.muted, marginTop: 3 } }, "@", username), allDates.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, marginTop: 6, background: t.card2, borderRadius: 8, padding: "3px 10px", border: `1px solid ${t.border}` } }, "Trainiert seit ", fmtS(allDates[0]))), /* @__PURE__ */ React.createElement("div", { style: __spreadProps(__spreadValues({}, S.card), { background: `linear-gradient(135deg,${li.color}18,${t.card})`, border: `1px solid ${li.color}44`, marginBottom: 12 }) }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, color: li.color, fontSize: 14 } }, "\u26A1 Level ", level), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: t.muted } }, li.title)), /* @__PURE__ */ React.createElement("div", { style: { background: t.border, borderRadius: 6, height: 6, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: `linear-gradient(90deg,${t.a},${t.b})`, width: `${xpProg / XP_LV * 100}%`, height: "100%" } }))), /* @__PURE__ */ React.createElement("div", { style: __spreadProps(__spreadValues({}, S.card), { textAlign: "center" }) }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 32 } }, "\u{1F525}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, fontWeight: 900, color: "#f97316" } }, streak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: t.muted } }, "Tage Streak"))));
 }
-function FriendsModal({ t, S, cu: cu2, onClose, onFriendsChanged }) {
+function FriendsModal({ t, S, cu, onClose, onFriendsChanged }) {
   const [q, setQ] = useState("");
   const [view, setView] = useState("main");
   const [reqTab, setReqTab] = useState("incoming");
-  const [friends, setFriends] = useState(() => sto.get(`gym_${cu2}_friends`, []));
+  const [friends, setFriends] = useState(() => sto.get(`gym_${cu}_friends`, []));
   const [profileUser, setProfileUser] = useState(null);
-  const [tick, setTick] = useState(0);
-  const refresh = () => setTick((p) => p + 1);
+  const [incoming, setIncoming] = useState([]);
+  const [outgoing, setOutgoing] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   const saveFriends = (list) => {
     setFriends(list);
-    sto.set(`gym_${cu2}_friends`, list);
+    sto.set(`gym_${cu}_friends`, list);
     onFriendsChanged && onFriendsChanged(list);
   };
-  const myRequests = getRequests(cu2);
-  const incoming = myRequests.filter((r) => r.to === cu2 && r.status === "pending");
-  const outgoing = myRequests.filter((r) => r.from === cu2 && r.status === "pending");
-  const incomingCount = incoming.length;
-  const sendRequest = (username) => {
-    const myR = getRequests(cu2);
-    if (myR.find((r) => r.from === cu2 && r.to === username && r.status === "pending")) return;
-    myR.push({ from: cu2, to: username, date: todayStr(), status: "pending" });
-    saveRequests(cu2, myR);
-    const theirR = getRequests(username);
-    theirR.push({ from: cu2, to: username, date: todayStr(), status: "pending" });
-    saveRequests(username, theirR);
-    refresh();
-  };
-  const cancelRequest = (username) => {
-    saveRequests(cu2, getRequests(cu2).filter((r) => !(r.from === cu2 && r.to === username)));
-    saveRequests(username, getRequests(username).filter((r) => !(r.from === cu2 && r.to === username)));
-    refresh();
-  };
-  const acceptRequest = (from) => {
-    const upd = (list) => list.map((r) => r.from === from && r.to === cu2 ? __spreadProps(__spreadValues({}, r), { status: "accepted" }) : r);
-    saveRequests(cu2, upd(getRequests(cu2)));
-    saveRequests(from, upd(getRequests(from)));
-    const myF = [.../* @__PURE__ */ new Set([...friends, from])];
-    saveFriends(myF);
-    const theirF = [.../* @__PURE__ */ new Set([...sto.get(`gym_${from}_friends`, []), cu2])];
-    sto.set(`gym_${from}_friends`, theirF);
-    if (window._fbDb) {
-      (async () => {
-        try {
-          const usnap = await window._fbDb.collection("usernames").doc(from.toLowerCase()).get();
-          if (usnap.exists) {
-            const uid = usnap.data().uid;
-            const key = encodeURIComponent(`gym_${from}_friends`);
-            await window._fbDb.collection("users").doc(uid).collection("data").doc(key).set({ v: JSON.stringify(theirF) }, { merge: true });
-          }
-        } catch (e) {
-          console.warn("Cross-user friends write failed:", e);
-        }
-      })();
+  const loadRequests = async () => {
+    if (!window._fbDb) return;
+    try {
+      const snap = await window._fbDb.collection("friendRequests").where("status", "==", "pending").get();
+      const inc = [], out = [];
+      snap.forEach((d) => {
+        const r = d.data();
+        if (r.to === cu) inc.push(__spreadProps(__spreadValues({}, r), { id: d.id }));
+        if (r.from === cu) out.push(__spreadProps(__spreadValues({}, r), { id: d.id }));
+      });
+      setIncoming(inc);
+      setOutgoing(out);
+    } catch (e) {
+      console.warn("loadRequests failed:", e);
     }
-    refresh();
   };
-  const rejectRequest = (from) => {
-    const upd = (list) => list.map((r) => r.from === from && r.to === cu2 ? __spreadProps(__spreadValues({}, r), { status: "rejected" }) : r);
-    saveRequests(cu2, upd(getRequests(cu2)));
-    saveRequests(from, upd(getRequests(from)));
-    refresh();
+  useEffect(() => {
+    loadRequests();
+  }, [cu]);
+  const incomingCount = incoming.length;
+  const sendRequest = async (username) => {
+    if (!window._fbDb) return;
+    const docId = `${cu}__${username}`;
+    try {
+      await window._fbDb.collection("friendRequests").doc(docId).set({
+        from: cu,
+        to: username,
+        status: "pending",
+        date: todayStr()
+      });
+      setOutgoing((p) => [...p, { from: cu, to: username, status: "pending", id: docId, date: todayStr() }]);
+    } catch (e) {
+      console.warn("sendRequest failed:", e);
+    }
+  };
+  const cancelRequest = async (username) => {
+    if (!window._fbDb) return;
+    const docId = `${cu}__${username}`;
+    try {
+      await window._fbDb.collection("friendRequests").doc(docId).delete();
+      setOutgoing((p) => p.filter((r) => r.to !== username));
+    } catch (e) {
+    }
+  };
+  const acceptRequest = async (from) => {
+    if (!window._fbDb) return;
+    const docId = `${from}__${cu}`;
+    try {
+      await window._fbDb.collection("friendRequests").doc(docId).update({ status: "accepted" });
+      const myF = [.../* @__PURE__ */ new Set([...friends, from])];
+      saveFriends(myF);
+      const usnap = await window._fbDb.collection("usernames").doc(from.toLowerCase()).get();
+      if (usnap.exists) {
+        const uid = usnap.data().uid;
+        const theirFriendsSnap = await window._fbDb.collection("users").doc(uid).collection("data").doc(encodeURIComponent(`gym_${from}_friends`)).get();
+        const theirF = theirFriendsSnap.exists ? JSON.parse(theirFriendsSnap.data().v || "[]") : [];
+        const newTheirF = [.../* @__PURE__ */ new Set([...theirF, cu])];
+        await window._fbDb.collection("users").doc(uid).collection("data").doc(encodeURIComponent(`gym_${from}_friends`)).set({ v: JSON.stringify(newTheirF) }, { merge: true });
+      }
+      setIncoming((p) => p.filter((r) => r.from !== from));
+    } catch (e) {
+      console.warn("acceptRequest failed:", e);
+    }
+  };
+  const rejectRequest = async (from) => {
+    if (!window._fbDb) return;
+    const docId = `${from}__${cu}`;
+    try {
+      await window._fbDb.collection("friendRequests").doc(docId).delete();
+      setIncoming((p) => p.filter((r) => r.from !== from));
+    } catch (e) {
+    }
   };
   const removeFriend = (username) => {
-    saveFriends(friends.filter((f) => f !== username));
-    sto.set(`gym_${username}_friends`, sto.get(`gym_${username}_friends`, []).filter((f) => f !== cu2));
-    saveRequests(cu2, getRequests(cu2).filter((r) => !(r.from === cu2 && r.to === username || r.from === username && r.to === cu2)));
-    saveRequests(username, getRequests(username).filter((r) => !(r.from === cu2 && r.to === username || r.from === username && r.to === cu2)));
-    refresh();
+    const myF = friends.filter((f) => f !== username);
+    saveFriends(myF);
   };
-  const [searchResults, setSearchResults] = useState([]);
-  const allUsers = Object.keys(sto.get("gym_users", {})).filter((u) => u !== cu2);
+  const getRelation = (username) => {
+    if (friends.includes(username)) return "friend";
+    if (outgoing.find((r) => r.to === username)) return "sent";
+    if (incoming.find((r) => r.from === username)) return "received";
+    return "none";
+  };
   useEffect(() => {
     if (!q.trim()) {
       setSearchResults([]);
       return;
     }
-    const localMatches = allUsers.filter((u) => u.toLowerCase().includes(q.toLowerCase()));
-    setSearchResults(localMatches);
-    if (window._fbDb) {
-      (async () => {
-        try {
-          const qStr = q.trim().toLowerCase();
-          const snap = await window._fbDb.collection("usernames").get();
-          const fbMatches = [];
-          snap.forEach((d) => {
-            const username = d.data().username;
-            if (username && username.toLowerCase().includes(qStr) && username !== cu2) {
-              fbMatches.push(username);
-              if (!localMatches.includes(username)) {
-                (async () => {
-                  const uid = d.data().uid;
-                  const pSnap = await window._fbDb.collection("users").doc(uid).get();
-                  if (pSnap.exists) {
-                    const usersMap = sto.get("gym_users", {});
-                    usersMap[username] = pSnap.data();
-                    sto.set("gym_users", usersMap);
-                  }
-                })();
+    setLoading(true);
+    (async () => {
+      try {
+        const qStr = q.trim().toLowerCase();
+        const snap = await window._fbDb.collection("usernames").get();
+        const matches = [];
+        snap.forEach((d) => {
+          const username = d.data().username;
+          if (username && username.toLowerCase().includes(qStr) && username !== cu) {
+            matches.push(username);
+            (async () => {
+              const uid = d.data().uid;
+              const pSnap = await window._fbDb.collection("users").doc(uid).get();
+              if (pSnap.exists) {
+                const usersMap = sto.get("gym_users", {});
+                usersMap[username] = pSnap.data();
+                sto.set("gym_users", usersMap);
               }
-            }
-          });
-          setSearchResults([.../* @__PURE__ */ new Set([...localMatches, ...fbMatches])]);
-        } catch (e) {
-          console.warn("Search error:", e);
-        }
-      })();
-    }
+            })();
+          }
+        });
+        setSearchResults(matches);
+      } catch (e) {
+        console.warn("Search error:", e);
+      }
+      setLoading(false);
+    })();
   }, [q]);
-  const results = searchResults;
-  const getRelation = (username) => {
-    if (friends.includes(username)) return "friend";
-    const myR = getRequests(cu2);
-    if (myR.find((r) => r.from === cu2 && r.to === username && r.status === "pending")) return "sent";
-    if (myR.find((r) => r.from === username && r.to === cu2 && r.status === "pending")) return "received";
-    return "none";
-  };
+  const allUsers = searchResults;
+  const results = allUsers;
+  const GB = ({ children, onClick, style, rc, disabled }) => /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      className: "gBtn",
+      "data-rc": rc || "rgba(255,255,255,.22)",
+      disabled,
+      onMouseDown: (e) => {
+        if (!disabled) {
+          addRipple(e);
+          setTimeout(onClick, 60);
+        }
+      },
+      style: __spreadValues({
+        border: "none",
+        cursor: disabled ? "not-allowed" : "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        fontWeight: 700,
+        opacity: disabled ? 0.45 : 1
+      }, style)
+    },
+    children
+  );
   const UserRow = ({ username, relation, showProfile = true }) => {
     const ud = sto.get("gym_users", {})[username] || {};
-    const lv = getLevel(sto.get(`gym_${username}_xp`, 0));
-    const li = getLvInfo(lv, "orange");
-    const xpP = getXpProg(sto.get(`gym_${username}_xp`, 0));
-    const streak = calcStreak(sto.get(`gym_${username}_completed`, {}));
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 11, padding: "10px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { cursor: showProfile ? "pointer" : "default" }, onClick: () => showProfile && setProfileUser(username) }, /* @__PURE__ */ React.createElement(Av, { ud, size: 42, accent: t.a })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, cursor: showProfile ? "pointer" : "default" }, onClick: () => showProfile && setProfileUser(username) }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 14 } }, getNameDisplay(ud, username, t)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted } }, "Lv ", lv, " \xB7 ", streak, "\u{1F525} Streak"), /* @__PURE__ */ React.createElement("div", { style: { background: t.border, borderRadius: 3, height: 3, marginTop: 3, width: 90, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: li.color, height: "100%", width: `${xpP / XP_LV * 100}%` } }))), relation === "friend" && /* @__PURE__ */ React.createElement("button", { className: "gBtn", "data-rc": "rgba(255,255,255,.2)", onMouseDown: (e) => {
-      addRipple(e);
-      setTimeout(() => removeFriend(username), 60);
-    }, style: { background: "#ef444422", color: "#ef4444", border: "none", borderRadius: 10, padding: "7px 10px", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "userMinus", size: 15, color: "#ef4444" })), relation === "none" && /* @__PURE__ */ React.createElement("button", { className: "gBtn", "data-rc": "rgba(255,255,255,.2)", onMouseDown: (e) => {
-      addRipple(e);
-      setTimeout(() => sendRequest(username), 60);
-    }, style: { background: t.a + "22", color: t.a, border: "none", borderRadius: 10, padding: "7px 11px", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" } }, "Anfragen"), relation === "sent" && /* @__PURE__ */ React.createElement("button", { className: "gBtn", "data-rc": "rgba(255,255,255,.2)", onMouseDown: (e) => {
-      addRipple(e);
-      setTimeout(() => cancelRequest(username), 60);
-    }, style: { background: "#94a3b822", color: "#94a3b8", border: "none", borderRadius: 10, padding: "7px 11px", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" } }, "Ausstehend"), relation === "received" && /* @__PURE__ */ React.createElement("button", { className: "gBtn", "data-rc": "rgba(255,255,255,.2)", onMouseDown: (e) => {
-      addRipple(e);
-      setTimeout(() => acceptRequest(username), 60);
-    }, style: { background: "#22c55e22", color: "#22c55e", border: "none", borderRadius: 10, padding: "7px 11px", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" } }, "Annehmen"));
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 11, padding: "10px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("div", { onClick: () => showProfile && setProfileUser(username), style: { cursor: showProfile ? "pointer" : "default" } }, /* @__PURE__ */ React.createElement(Av, { ud, size: 40, accent: t.a })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 }, onClick: () => showProfile && setProfileUser(username) }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 14 } }, ud.displayName || username), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted } }, "@", username)), relation === "friend" && /* @__PURE__ */ React.createElement(
+      GB,
+      {
+        onClick: () => removeFriend(username),
+        rc: "rgba(239,68,68,.2)",
+        style: { background: "#ef444422", color: "#ef4444", borderRadius: 9, padding: "6px 12px", fontSize: 12 }
+      },
+      "Entfernen"
+    ), relation === "sent" && /* @__PURE__ */ React.createElement("div", { style: __spreadProps(__spreadValues({}, S.pill(t.muted)), { fontSize: 11 }) }, "\u23F3 Ausstehend"), relation === "received" && /* @__PURE__ */ React.createElement(
+      GB,
+      {
+        onClick: () => acceptRequest(username),
+        style: { background: t.a, color: "#fff", borderRadius: 9, padding: "6px 12px", fontSize: 12 }
+      },
+      "Akzeptieren"
+    ), relation === "none" && /* @__PURE__ */ React.createElement(
+      GB,
+      {
+        onClick: () => sendRequest(username),
+        style: { background: t.a + "22", color: t.a, borderRadius: 9, padding: "6px 12px", fontSize: 12 }
+      },
+      "+ Hinzuf\xFCgen"
+    ));
   };
-  const popBg = "rgba(0,0,0,.6)";
-  const drawer = { background: t.card, borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 430, margin: "0 auto", maxHeight: "85vh", overflowY: "auto", animation: "sheetUp .34s cubic-bezier(.32,.72,0,1)" };
-  if (profileUser) return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(FriendProfileModal, { t, S, username: profileUser, onClose: () => setProfileUser(null) }));
-  if (view === "requests") return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 300, bg: popBg, style: { background: t.card, padding: 24, maxHeight: "85vh", animation: "sheetUp .34s cubic-bezier(.32,.72,0,1)" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("main"), style: { background: "none", border: "none", cursor: "pointer", color: t.muted, fontSize: 20, lineHeight: 1 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800, flex: 1 } }, "Anfragen"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 22, color: t.muted }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, background: `rgba(0,0,0,.15)`, borderRadius: 12, padding: 4, marginBottom: 16 } }, [["incoming", "Eingehend"], ["outgoing", "Ausstehend"]].map(([k, lb]) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setReqTab(k), style: { flex: 1, background: reqTab === k ? t.card : "none", border: "none", borderRadius: 9, padding: "9px 0", fontWeight: 700, fontSize: 13, color: reqTab === k ? t.a : t.muted, cursor: "pointer" } }, lb, k === "incoming" && incomingCount > 0 && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 5, background: "#ef4444", color: "#fff", borderRadius: 10, padding: "1px 6px", fontSize: 10 } }, incomingCount)))), reqTab === "incoming" && (incoming.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: t.muted, padding: "28px 0" } }, "Keine eingehenden Anfragen") : incoming.map((r) => {
-    const ud = sto.get("gym_users", {})[r.from] || {};
-    const lv = getLevel(sto.get(`gym_${r.from}_xp`, 0));
-    const streak = calcStreak(sto.get(`gym_${r.from}_completed`, {}));
-    return /* @__PURE__ */ React.createElement("div", { key: r.from, style: { display: "flex", alignItems: "center", gap: 11, padding: "10px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement(Av, { ud, size: 42, accent: t.a }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 14 } }, getNameDisplay(ud, r.from, t)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted } }, "Lv ", lv, " \xB7 ", streak, "\u{1F525} \xB7 ", r.date)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { className: "gBtn", "data-rc": "rgba(255,255,255,.2)", onMouseDown: (e) => {
-      addRipple(e);
-      setTimeout(() => acceptRequest(r.from), 60);
-    }, style: { background: "#22c55e", color: "#fff", border: "none", borderRadius: 10, padding: "7px 11px", fontWeight: 700, fontSize: 12, cursor: "pointer" } }, "\u2713"), /* @__PURE__ */ React.createElement("button", { className: "gBtn", "data-rc": "rgba(255,255,255,.2)", onMouseDown: (e) => {
-      addRipple(e);
-      setTimeout(() => rejectRequest(r.from), 60);
-    }, style: { background: "#ef444422", color: "#ef4444", border: "none", borderRadius: 10, padding: "7px 11px", fontWeight: 700, fontSize: 12, cursor: "pointer" } }, "\u2715")));
-  })), reqTab === "outgoing" && (outgoing.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: t.muted, padding: "28px 0" } }, "Keine ausstehenden Anfragen") : outgoing.map((r) => {
-    const ud = sto.get("gym_users", {})[r.to] || {};
-    return /* @__PURE__ */ React.createElement("div", { key: r.to, style: { display: "flex", alignItems: "center", gap: 11, padding: "10px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement(Av, { ud, size: 42, accent: t.a }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 14 } }, getNameDisplay(ud, r.to, t)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted } }, "Anfrage vom ", r.date)), /* @__PURE__ */ React.createElement("button", { className: "gBtn", "data-rc": "rgba(255,255,255,.2)", onMouseDown: (e) => {
-      addRipple(e);
-      setTimeout(() => cancelRequest(r.to), 60);
-    }, style: { background: "#ef444422", color: "#ef4444", border: "none", borderRadius: 10, padding: "7px 11px", fontWeight: 700, fontSize: 12, cursor: "pointer" } }, "Abbrechen"));
+  if (profileUser) return /* @__PURE__ */ React.createElement(FriendProfileModal, { t, S, username: profileUser, cu, onClose: () => setProfileUser(null) });
+  if (view === "requests") return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 350, bg: "rgba(0,0,0,.65)", style: { background: t.card, maxHeight: "92vh" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "0 20px 28px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("main"), style: { background: "none", border: "none", cursor: "pointer", padding: 4 } }, /* @__PURE__ */ React.createElement(Icon, { name: "chevDn", size: 20, color: t.muted, style: { transform: "rotate(90deg)" } })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, "Anfragen")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 16 } }, [["incoming", "Eingehend"], ["outgoing", "Gesendet"]].map(([k, l]) => /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      key: k,
+      onClick: () => setReqTab(k),
+      style: {
+        flex: 1,
+        padding: "8px 0",
+        borderRadius: 10,
+        border: "none",
+        cursor: "pointer",
+        fontWeight: 700,
+        fontSize: 13,
+        background: reqTab === k ? t.a : t.card2,
+        color: reqTab === k ? "#fff" : t.muted
+      }
+    },
+    l,
+    k === "incoming" && incomingCount > 0 ? ` (${incomingCount})` : ""
+  ))), reqTab === "incoming" && (incoming.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: t.muted, padding: 24, fontSize: 13 } }, "Keine eingehenden Anfragen") : incoming.map((r) => {
+    var _a;
+    return /* @__PURE__ */ React.createElement("div", { key: r.id, style: { display: "flex", alignItems: "center", gap: 11, padding: "10px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement(Av, { ud: sto.get("gym_users", {})[r.from] || {}, size: 40, accent: t.a }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 14 } }, ((_a = sto.get("gym_users", {})[r.from]) == null ? void 0 : _a.displayName) || r.from), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted } }, "@", r.from)), /* @__PURE__ */ React.createElement(GB, { onClick: () => rejectRequest(r.from), style: { background: "#ef444422", color: "#ef4444", borderRadius: 9, padding: "6px 10px", fontSize: 12 } }, "\u2715"), /* @__PURE__ */ React.createElement(GB, { onClick: () => acceptRequest(r.from), style: { background: t.a, color: "#fff", borderRadius: 9, padding: "6px 12px", fontSize: 12 } }, "\u2713 Annehmen"));
+  })), reqTab === "outgoing" && (outgoing.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: t.muted, padding: 24, fontSize: 13 } }, "Keine gesendeten Anfragen") : outgoing.map((r) => {
+    var _a;
+    return /* @__PURE__ */ React.createElement("div", { key: r.id, style: { display: "flex", alignItems: "center", gap: 11, padding: "10px 0", borderBottom: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement(Av, { ud: sto.get("gym_users", {})[r.to] || {}, size: 40, accent: t.a }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, fontSize: 14 } }, ((_a = sto.get("gym_users", {})[r.to]) == null ? void 0 : _a.displayName) || r.to), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted } }, "@", r.to)), /* @__PURE__ */ React.createElement(
+      GB,
+      {
+        onClick: () => cancelRequest(r.to),
+        rc: "rgba(239,68,68,.2)",
+        style: { background: "#ef444422", color: "#ef4444", borderRadius: 9, padding: "6px 12px", fontSize: 12 }
+      },
+      "Zur\xFCckziehen"
+    ));
   }))));
-  return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 300, bg: popBg, style: { background: t.card, padding: 24, maxHeight: "85vh", animation: "sheetUp .34s cubic-bezier(.32,.72,0,1)" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800 } }, "Freunde"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { className: "gBtn", "data-rc": "rgba(255,255,255,.2)", onMouseDown: (e) => {
-    addRipple(e);
-    setTimeout(() => setView("requests"), 60);
-  }, style: { background: incomingCount > 0 ? "#ef444422" : t.card2, border: `1px solid ${incomingCount > 0 ? "#ef444455" : t.border}`, borderRadius: 10, padding: "7px 12px", fontWeight: 700, fontSize: 12, cursor: "pointer", color: incomingCount > 0 ? "#ef4444" : t.muted, display: "flex", alignItems: "center", gap: 5 } }, /* @__PURE__ */ React.createElement(Icon, { name: "userPlus", size: 15, color: incomingCount > 0 ? "#ef4444" : t.muted }), "Anfragen", incomingCount > 0 && /* @__PURE__ */ React.createElement("span", { style: { background: "#ef4444", color: "#fff", borderRadius: 10, padding: "0 5px", fontSize: 10, fontWeight: 800 } }, incomingCount)), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 22, color: t.muted })))), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" } }, /* @__PURE__ */ React.createElement(Icon, { name: "search", size: 16, color: t.muted })), /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, S.inp), { paddingLeft: 40 }), placeholder: "User suchen\u2026", value: q, onChange: (e) => setQ(e.target.value) })), q.trim().length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 4, textTransform: "uppercase" } }, "Suchergebnisse"), results.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { color: t.muted, fontSize: 13, padding: "8px 0" } }, "Niemand gefunden") : results.map((u) => /* @__PURE__ */ React.createElement(UserRow, { key: u, username: u, relation: getRelation(u), showProfile: true }))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 4, textTransform: "uppercase" } }, "Meine Freunde (", friends.length, ")"), friends.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { color: t.muted, fontSize: 13, padding: "20px 0", textAlign: "center" } }, "Noch keine Freunde \u2013 suche nach Usern!") : friends.map((u) => /* @__PURE__ */ React.createElement(UserRow, { key: u, username: u, relation: "friend", showProfile: true }))));
+  return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 350, bg: "rgba(0,0,0,.65)", style: { background: t.card, maxHeight: "92vh" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "0 20px 28px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "Freunde"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } }, incomingCount > 0 && /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setView("requests"),
+      style: { background: "#ef4444", color: "#fff", border: "none", borderRadius: 10, padding: "6px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }
+    },
+    incomingCount,
+    " Anfrage",
+    incomingCount > 1 ? "n" : ""
+  ), incomingCount === 0 && outgoing.length > 0 && /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setView("requests"),
+      style: { background: t.card2, border: `1px solid ${t.border}`, color: t.muted, borderRadius: 10, padding: "6px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }
+    },
+    "Anfragen"
+  ), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", cursor: "pointer", padding: 4 } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 20, color: t.muted })))), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" } }, /* @__PURE__ */ React.createElement(Icon, { name: "search", size: 16, color: t.muted })), /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, S.inp), { paddingLeft: 40 }), placeholder: "User suchen\u2026", value: q, onChange: (e) => setQ(e.target.value) })), q.trim().length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 13 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 4, textTransform: "uppercase" } }, "Suchergebnisse"), loading && /* @__PURE__ */ React.createElement("div", { style: { color: t.muted, fontSize: 13, padding: "8px 0" } }, "Suche\u2026"), !loading && results.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: t.muted, fontSize: 13, padding: "8px 0" } }, "Kein User gefunden"), results.map((u) => /* @__PURE__ */ React.createElement(UserRow, { key: u, username: u, relation: getRelation(u) }))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 8, textTransform: "uppercase" } }, "Freunde (", friends.length, ")"), friends.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", color: t.muted, padding: "24px 0", fontSize: 13 } }, "Noch keine Freunde \u2014 suche nach Usernamen oben") : friends.map((u) => /* @__PURE__ */ React.createElement(UserRow, { key: u, username: u, relation: "friend" }))));
 }
-function SettingsModal({ t, S, dark, setDark, themeKey, setThemeKey, cu: cu2, onLogout, onClose }) {
-  const [ud, setUd] = useState(() => sto.get("gym_users", {})[cu2] || {});
+function SettingsModal({ t, S, dark, setDark, themeKey, setThemeKey, cu, onLogout, onClose }) {
+  const [ud, setUd] = useState(() => sto.get("gym_users", {})[cu] || {});
   const [showAv, setShowAv] = useState(false);
   const fRef = useRef();
   const save = (patch) => {
     const us = sto.get("gym_users", {});
-    Object.assign(us[cu2], patch);
+    Object.assign(us[cu], patch);
     sto.set("gym_users", us);
     setUd((u) => __spreadValues(__spreadValues({}, u), patch));
   };
@@ -1241,19 +1298,19 @@ function SettingsModal({ t, S, dark, setDark, themeKey, setThemeKey, cu: cu2, on
     addRipple(e);
     setTimeout(onClick, 60);
   }, style: __spreadValues({ cursor: "pointer", border: "none" }, style) }, children);
-  return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 200, bg: "rgba(0,0,0,.6)", style: { background: t.card, padding: 24, maxHeight: "88vh", animation: "sheetUp .34s cubic-bezier(.32,.72,0,1)" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800 } }, "Einstellungen"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 22, color: t.muted }))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 17 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 7, textTransform: "uppercase" } }, "Profil"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, background: t.card2, borderRadius: 14, padding: 13, border: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", cursor: "pointer" }, onClick: () => fRef.current.click() }, /* @__PURE__ */ React.createElement(Av, { ud, size: 52, accent: t.a }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", bottom: -1, right: -1, background: t.a, borderRadius: "50%", width: 19, height: 19, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Icon, { name: "camera", size: 10, color: "#fff" }))), /* @__PURE__ */ React.createElement("input", { ref: fRef, type: "file", accept: "image/*", style: { display: "none" }, onChange: onFile }), /* @__PURE__ */ React.createElement("div", null, ud.isDev ? /* @__PURE__ */ React.createElement(DevName, { n: cu2 }) : /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700 } }, cu2), /* @__PURE__ */ React.createElement("button", { onClick: () => setShowAv((p) => !p), style: { marginTop: 4, background: "none", border: `1px solid ${t.border}`, borderRadius: 7, padding: "3px 9px", fontSize: 12, cursor: "pointer", color: t.muted } }, "Emoji w\xE4hlen"))), showAv && /* @__PURE__ */ React.createElement("div", { style: { background: t.card2, borderRadius: 12, padding: 10, marginTop: 7, display: "flex", flexWrap: "wrap", gap: 7 } }, AVATARS.map((a) => /* @__PURE__ */ React.createElement("button", { key: a, onClick: () => {
+  return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 200, bg: "rgba(0,0,0,.6)", style: { background: t.card, padding: 24, maxHeight: "88vh", animation: "sheetUp .34s cubic-bezier(.32,.72,0,1)" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800 } }, "Einstellungen"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 22, color: t.muted }))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 17 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 7, textTransform: "uppercase" } }, "Profil"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, background: t.card2, borderRadius: 14, padding: 13, border: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", cursor: "pointer" }, onClick: () => fRef.current.click() }, /* @__PURE__ */ React.createElement(Av, { ud, size: 52, accent: t.a }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", bottom: -1, right: -1, background: t.a, borderRadius: "50%", width: 19, height: 19, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Icon, { name: "camera", size: 10, color: "#fff" }))), /* @__PURE__ */ React.createElement("input", { ref: fRef, type: "file", accept: "image/*", style: { display: "none" }, onChange: onFile }), /* @__PURE__ */ React.createElement("div", null, ud.isDev ? /* @__PURE__ */ React.createElement(DevName, { n: cu }) : /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700 } }, cu), /* @__PURE__ */ React.createElement("button", { onClick: () => setShowAv((p) => !p), style: { marginTop: 4, background: "none", border: `1px solid ${t.border}`, borderRadius: 7, padding: "3px 9px", fontSize: 12, cursor: "pointer", color: t.muted } }, "Emoji w\xE4hlen"))), showAv && /* @__PURE__ */ React.createElement("div", { style: { background: t.card2, borderRadius: 12, padding: 10, marginTop: 7, display: "flex", flexWrap: "wrap", gap: 7 } }, AVATARS.map((a) => /* @__PURE__ */ React.createElement("button", { key: a, onClick: () => {
     save({ avatar: a, photo: null });
     setShowAv(false);
   }, style: { fontSize: 25, background: ud.avatar === a ? t.a + "22" : t.card, border: ud.avatar === a ? `2px solid ${t.a}` : `1px solid ${t.border}`, borderRadius: 8, width: 39, height: 39, cursor: "pointer" } }, a)))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 17 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 7, textTransform: "uppercase" } }, "Erscheinungsbild"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, [["sun", "Hell", false], ["moon", "Dunkel", true]].map(([ic, lb, dm]) => /* @__PURE__ */ React.createElement(GB, { key: lb, onClick: () => setDark(dm), style: { flex: 1, background: dark === dm ? t.a : t.card2, color: dark === dm ? "#fff" : t.text, borderRadius: 11, padding: "11px 0", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 14 } }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 16, color: dark === dm ? "#fff" : t.text }), lb)))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 22 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, fontWeight: 700, marginBottom: 9, textTransform: "uppercase" } }, "Farb-Theme"), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 } }, Object.entries(THEMES).map(([key, th]) => /* @__PURE__ */ React.createElement(GB, { key, onClick: () => setThemeKey(key), style: { background: themeKey === key ? th.a + "22" : t.card2, border: themeKey === key ? `2px solid ${th.a}` : `1px solid ${t.border}`, borderRadius: 12, padding: "12px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 5 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 22, height: 22, borderRadius: "50%", background: `linear-gradient(135deg,${th.a},${th.b})` } }), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: themeKey === key ? th.a : t.muted } }, th.name), themeKey === key && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: th.a } }, "\u2713"))))), /* @__PURE__ */ React.createElement(GB, { onClick: onLogout, style: { width: "100%", background: "none", border: "1px solid #ef444444", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 700, color: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 } }, /* @__PURE__ */ React.createElement(Icon, { name: "logout", size: 18, color: "#ef4444" }), "Abmelden"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, textAlign: "center", marginTop: 13 } }, "Gymify Fitness Launch \xB7 v7.12")));
 }
 function App() {
   const [splash, setSplash] = useState(true);
-  const [cu2, setCu] = useState(() => sto.get("gym_currentUser", null));
-  const uk = (k) => `gym_${cu2}_${k}`;
-  const [dark, setDark] = useState(() => sto.get(cu2 ? `gym_${cu2}_dark` : "gym_dark", false));
-  const [themeKey, setThemeKey] = useState(() => sto.get(cu2 ? `gym_${cu2}_theme` : "gym_theme", "orange"));
+  const [cu, setCu] = useState(() => sto.get("gym_currentUser", null));
+  const uk = (k) => `gym_${cu}_${k}`;
+  const [dark, setDark] = useState(() => sto.get(cu ? `gym_${cu}_dark` : "gym_dark", false));
+  const [themeKey, setThemeKey] = useState(() => sto.get(cu ? `gym_${cu}_theme` : "gym_theme", "orange"));
   const [tab, setTab] = useState("home");
-  const cuRef = useRef(cu2);
+  const cuRef = useRef(cu);
   const [workouts, setWorkoutsRaw] = useState([]);
   const [rotIdx, setRotIdxRaw] = useState(0);
   const [rotMode, setRotModeRaw] = useState("daily");
@@ -1365,11 +1422,11 @@ function App() {
     calLogRef.current = calLog;
   }, [calLog]);
   useEffect(() => {
-    if (cu2) sto.set(`gym_${cu2}_dark`, dark);
-  }, [dark, cu2]);
+    if (cu) sto.set(`gym_${cu}_dark`, dark);
+  }, [dark, cu]);
   useEffect(() => {
-    if (cu2) sto.set(`gym_${cu2}_theme`, themeKey);
-  }, [themeKey, cu2]);
+    if (cu) sto.set(`gym_${cu}_theme`, themeKey);
+  }, [themeKey, cu]);
   const [showSets, setShowSets] = useState(false);
   const [showProf, setShowProf] = useState(false);
   const [showFrd, setShowFrd] = useState(false);
@@ -1383,7 +1440,7 @@ function App() {
     window.scrollTo(0, 0);
   }, [tab]);
   useEffect(() => {
-    if (cu2) login(cu2);
+    if (cu) login(cu);
   }, []);
   const login = (u) => {
     cuRef.current = u;
@@ -1441,15 +1498,15 @@ function App() {
   const trackCount = Object.values(trackData).reduce((a, e) => a + e.length, 0);
   const todayWater = waterLog[todayStr()] || 0;
   const calDaysCount = Object.values(calLog).filter((d) => d.total > 0).length;
-  const ud = sto.get("gym_users", {})[cu2] || {};
-  const friends = sto.get(`gym_${cu2}_friends`, []);
+  const ud = sto.get("gym_users", {})[cu] || {};
+  const friends = sto.get(`gym_${cu}_friends`, []);
   const theme = THEMES[themeKey] || THEMES.orange;
   const checkChals = (opts = {}) => {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
     const cL = getLevel((_a = opts.xp) != null ? _a : xp), cT = (_b = opts.trackCount) != null ? _b : trackCount, cR = (_c = opts.rotCount) != null ? _c : rotCount;
     const cW = (_d = opts.water) != null ? _d : todayWater, cWk = (_e = opts.workoutCount) != null ? _e : workouts.length, cC = (_f = opts.calDays) != null ? _f : calDaysCount;
     const cS = (_h = opts.streak) != null ? _h : calcStreak((_g = opts.completed) != null ? _g : completed);
-    const cF = (_i = opts.friends) != null ? _i : sto.get(`gym_${cu2}_friends`, []).length;
+    const cF = (_i = opts.friends) != null ? _i : sto.get(`gym_${cu}_friends`, []).length;
     let bonus = 0;
     const cd = (_j = opts.doneChals) != null ? _j : doneChals;
     CHALS.forEach((c) => {
@@ -1495,8 +1552,8 @@ function App() {
     }
   };
   useEffect(() => {
-    if (rotMode !== "daily" || !cu2 || workouts.length === 0) return;
-    const lastDate = sto.get(`gym_${cu2}_lastDoneDate`, null);
+    if (rotMode !== "daily" || !cu || workouts.length === 0) return;
+    const lastDate = sto.get(`gym_${cu}_lastDoneDate`, null);
     if (lastDate && lastDate !== todayStr() && completed[lastDate]) {
       const next = (rotIdx + 1) % workouts.length;
       setRotIdx(next);
@@ -1506,9 +1563,9 @@ function App() {
         setRotCount(nr);
       }
       if (nr !== rotCount) setTimeout(() => checkChals({ rotCount: nr }), 50);
-      sto.set(`gym_${cu2}_lastDoneDate`, null);
+      sto.set(`gym_${cu}_lastDoneDate`, null);
     }
-  }, [cu2, rotMode, workouts.length]);
+  }, [cu, rotMode, workouts.length]);
   const addTrackEntry = (ex, entry) => {
     const u = __spreadProps(__spreadValues({}, trackData), { [ex]: [...trackData[ex] || [], entry] });
     setTrackData(u);
@@ -1541,16 +1598,16 @@ function App() {
   };
   const barActiveStyle = { fill: "transparent" };
   if (splash) return /* @__PURE__ */ React.createElement(Splash, { onDone: () => setSplash(false) });
-  if (!cu2) return /* @__PURE__ */ React.createElement(Auth, { onLogin: login });
-  return /* @__PURE__ */ React.createElement("div", { style: S.app }, showSets && /* @__PURE__ */ React.createElement(SettingsModal, { t, S, dark, setDark, themeKey, setThemeKey, cu: cu2, onLogout: logout, onClose: () => setShowSets(false) }), showProf && /* @__PURE__ */ React.createElement(ProfileModal, { t, S, cu: cu2, level, li, xpProg, xp, onClose: () => setShowProf(false), onDeleted: () => {
+  if (!cu) return /* @__PURE__ */ React.createElement(Auth, { onLogin: login });
+  return /* @__PURE__ */ React.createElement("div", { style: S.app }, showSets && /* @__PURE__ */ React.createElement(SettingsModal, { t, S, dark, setDark, themeKey, setThemeKey, cu, onLogout: logout, onClose: () => setShowSets(false) }), showProf && /* @__PURE__ */ React.createElement(ProfileModal, { t, S, cu, level, li, xpProg, xp, onClose: () => setShowProf(false), onDeleted: () => {
     setShowProf(false);
     logout();
   }, onUsernameChanged: (nu) => {
     setShowProf(false);
     login(nu);
-  } }), showFrd && /* @__PURE__ */ React.createElement(FriendsModal, { t, S, cu: cu2, onClose: () => setShowFrd(false) }), showStreak && /* @__PURE__ */ React.createElement(StreakModal, { t, S, completed, cu: cu2, onClose: () => setShowStreak(false) }), /* @__PURE__ */ React.createElement("div", { style: S.scroll, ref: scrollRef }, tab === "home" && /* @__PURE__ */ React.createElement(HomeTab, { t, S, cw, todayDone, markDone, level, li, xpProg, onSets: () => setShowSets(true), onProf: () => setShowProf(true), onFrd: () => setShowFrd(true), onShowStreak: () => setShowStreak(true), cu: cu2, ud, workouts, setWorkouts, friends, completed, waterLog }), tab === "workouts" && /* @__PURE__ */ React.createElement(WorkoutsTab, { t, S, workouts, setWorkouts, rotIdx, setRotIdx, rotMode, setRotMode, checkChals }), tab === "tracker" && /* @__PURE__ */ React.createElement(TrackerTab, { t, S, CT, workouts, trackData, addTrackEntry, waterLog, calLog, cu: cu2, friends, completed }), tab === "level" && /* @__PURE__ */ React.createElement(LevelTab, { t, S, xp, level, li, xpProg, doneChals, rotCount, trackCount, themeKey, workoutCount: workouts.length, todayWater, calDaysCount, streak: calcStreak(completed), friendsCount: friends.length }), tab === "tools" && /* @__PURE__ */ React.createElement(ToolsTab, { t, S, todayWater, setTodayWater, calLog, setCalLog, onCalChange: () => setTimeout(() => checkChals({ calDays: Object.values(calLog).filter((d) => d.total > 0).length + 1 }), 50) })), /* @__PURE__ */ React.createElement("div", { style: S.tabBar }, [["home", "home", "Home"], ["workouts", "dumbbell", "Workouts"], ["tracker", "chart", "Tracking"], ["level", "star", "Level"], ["tools", "tools", "Tools"]].map(([id, ic, lb]) => /* @__PURE__ */ React.createElement("button", { key: id, style: S.tabBtn(tab === id), onClick: () => setTab(id) }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 22, color: tab === id ? t.a : t.muted }), /* @__PURE__ */ React.createElement("span", { style: S.tabLbl }, lb)))));
+  } }), showFrd && /* @__PURE__ */ React.createElement(FriendsModal, { t, S, cu, onClose: () => setShowFrd(false) }), showStreak && /* @__PURE__ */ React.createElement(StreakModal, { t, S, completed, cu, onClose: () => setShowStreak(false) }), /* @__PURE__ */ React.createElement("div", { style: S.scroll, ref: scrollRef }, tab === "home" && /* @__PURE__ */ React.createElement(HomeTab, { t, S, cw, todayDone, markDone, level, li, xpProg, onSets: () => setShowSets(true), onProf: () => setShowProf(true), onFrd: () => setShowFrd(true), onShowStreak: () => setShowStreak(true), cu, ud, workouts, setWorkouts, friends, completed, waterLog }), tab === "workouts" && /* @__PURE__ */ React.createElement(WorkoutsTab, { t, S, workouts, setWorkouts, rotIdx, setRotIdx, rotMode, setRotMode, checkChals }), tab === "tracker" && /* @__PURE__ */ React.createElement(TrackerTab, { t, S, CT, workouts, trackData, addTrackEntry, waterLog, calLog, cu, friends, completed }), tab === "level" && /* @__PURE__ */ React.createElement(LevelTab, { t, S, xp, level, li, xpProg, doneChals, rotCount, trackCount, themeKey, workoutCount: workouts.length, todayWater, calDaysCount, streak: calcStreak(completed), friendsCount: friends.length }), tab === "tools" && /* @__PURE__ */ React.createElement(ToolsTab, { t, S, todayWater, setTodayWater, calLog, setCalLog, onCalChange: () => setTimeout(() => checkChals({ calDays: Object.values(calLog).filter((d) => d.total > 0).length + 1 }), 50) })), /* @__PURE__ */ React.createElement("div", { style: S.tabBar }, [["home", "home", "Home"], ["workouts", "dumbbell", "Workouts"], ["tracker", "chart", "Tracking"], ["level", "star", "Level"], ["tools", "tools", "Tools"]].map(([id, ic, lb]) => /* @__PURE__ */ React.createElement("button", { key: id, style: S.tabBtn(tab === id), onClick: () => setTab(id) }, /* @__PURE__ */ React.createElement(Icon, { name: ic, size: 22, color: tab === id ? t.a : t.muted }), /* @__PURE__ */ React.createElement("span", { style: S.tabLbl }, lb)))));
 }
-function HomeTab({ t, S, cw, todayDone, markDone, level, li, xpProg, onSets, onProf, onFrd, cu: cu2, ud, workouts, setWorkouts, friends, completed, waterLog, onShowStreak }) {
+function HomeTab({ t, S, cw, todayDone, markDone, level, li, xpProg, onSets, onProf, onFrd, cu, ud, workouts, setWorkouts, friends, completed, waterLog, onShowStreak }) {
   var _a, _b, _c, _d;
   const [exOpen, setExOpen] = useState(false);
   const [showWkEdit, setShowWkEdit] = useState(false);
@@ -1574,8 +1631,8 @@ function HomeTab({ t, S, cw, todayDone, markDone, level, li, xpProg, onSets, onP
     addRipple(e);
     setTimeout(onClick, 70);
   }, style: __spreadValues({ border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontWeight: 700 }, style) }, children);
-  return /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px", animation: "fadeUp .3s ease" } }, /* @__PURE__ */ React.createElement("div", { style: S.hdr }, /* @__PURE__ */ React.createElement("button", { onClick: onProf, style: { display: "flex", alignItems: "center", gap: 11, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" } }, /* @__PURE__ */ React.createElement(Av, { ud, size: 48, accent: t.a }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: t.muted } }, fmtDate(todayStr())), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, marginTop: 1 } }, ud.isDev ? /* @__PURE__ */ React.createElement(DevName, { n: ud.displayName || cu2 }) : ud.isGymBro ? /* @__PURE__ */ React.createElement("span", null, "Hey, ", /* @__PURE__ */ React.createElement(GymBroName, { n: ud.displayName || cu2 }), " \u{1F44B}") : `Hey, ${ud.displayName || cu2}! \u{1F44B}`))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFrd, style: { background: "none", border: "none", cursor: "pointer", position: "relative" } }, /* @__PURE__ */ React.createElement(Icon, { name: "users", size: 24, color: t.muted }), (() => {
-    const inReqs = getRequests(cu2).filter((r) => r.to === cu2 && r.status === "pending").length;
+  return /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px", animation: "fadeUp .3s ease" } }, /* @__PURE__ */ React.createElement("div", { style: S.hdr }, /* @__PURE__ */ React.createElement("button", { onClick: onProf, style: { display: "flex", alignItems: "center", gap: 11, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" } }, /* @__PURE__ */ React.createElement(Av, { ud, size: 48, accent: t.a }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: t.muted } }, fmtDate(todayStr())), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800, marginTop: 1 } }, ud.isDev ? /* @__PURE__ */ React.createElement(DevName, { n: ud.displayName || cu }) : ud.isGymBro ? /* @__PURE__ */ React.createElement("span", null, "Hey, ", /* @__PURE__ */ React.createElement(GymBroName, { n: ud.displayName || cu }), " \u{1F44B}") : `Hey, ${ud.displayName || cu}! \u{1F44B}`))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFrd, style: { background: "none", border: "none", cursor: "pointer", position: "relative" } }, /* @__PURE__ */ React.createElement(Icon, { name: "users", size: 24, color: t.muted }), (() => {
+    const inReqs = 0;
     const count = inReqs > 0 ? inReqs : friends.length;
     const color = inReqs > 0 ? "#ef4444" : t.a;
     return count > 0 ? /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: -3, right: -3, width: 16, height: 16, borderRadius: "50%", background: color, fontSize: 9, fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" } }, count) : null;
@@ -2094,7 +2151,7 @@ function WorkoutsTab({ t, S, workouts, setWorkouts, rotIdx, setRotIdx, rotMode, 
     }
   ));
 }
-function TrackerTab({ t, S, CT, workouts, trackData, addTrackEntry, waterLog, calLog, cu: cu2, friends, completed }) {
+function TrackerTab({ t, S, CT, workouts, trackData, addTrackEntry, waterLog, calLog, cu, friends, completed }) {
   const [selEx, setSelEx] = useState(null);
   const [form, setForm] = useState({ weight: "", reps: "", date: todayStr() });
   const [showAll, setShowAll] = useState(false);
@@ -2182,10 +2239,10 @@ Fortschritt: ${diff >= 0 ? "+" : ""}${diff}kg (${pct >= 0 ? "+" : ""}${pct}%)`;
     const ud = sto.get("gym_users", {})[u] || {};
     return ud.displayName || ud.username || u;
   };
-  const myDisp = getDisp(cu2);
-  const lvCmp = [{ label: `Ich (${myDisp})`, lv: getLevel(sto.get(`gym_${cu2}_xp`, 0)), color: t.a }, ...friends.map((f, i) => ({ label: getDisp(f), lv: getLevel(sto.get(`gym_${f}_xp`, 0)), color: ACC[(i + 1) % ACC.length] }))];
+  const myDisp = getDisp(cu);
+  const lvCmp = [{ label: `Ich (${myDisp})`, lv: getLevel(sto.get(`gym_${cu}_xp`, 0)), color: t.a }, ...friends.map((f, i) => ({ label: getDisp(f), lv: getLevel(sto.get(`gym_${f}_xp`, 0)), color: ACC[(i + 1) % ACC.length] }))];
   const streakCmp = [
-    { label: `Ich (${myDisp})`, streak: calcStreak(completed || sto.get(`gym_${cu2}_completed`, {})), color: t.a },
+    { label: `Ich (${myDisp})`, streak: calcStreak(completed || sto.get(`gym_${cu}_completed`, {})), color: t.a },
     ...friends.map((f, i) => ({
       label: getDisp(f),
       streak: calcStreak(sto.get(`gym_${f}_completed`, {})),
@@ -2349,6 +2406,7 @@ ReactDOM.render(/* @__PURE__ */ React.createElement(App, null), document.getElem
 
 })();
 </script>
+
 
 
 
