@@ -259,9 +259,13 @@ const sto = {
       localStorage.setItem(k, JSON.stringify(v));
     } catch (e) {
     }
-    if (window._fbDb && window._fbUid) {
-      window._fbDb.collection("users").doc(window._fbUid).collection("data").doc(encodeURIComponent(k)).set({ v: JSON.stringify(v) }, { merge: true }).catch(() => {
-      });
+    if (window._fbDb && window._fbUid && window._fbCurrentUsername) {
+      const prefix = `gym_${window._fbCurrentUsername}_`;
+      const globalKeys = ["gym_currentUser", "gym_users"];
+      if (k.startsWith(prefix) || globalKeys.includes(k)) {
+        window._fbDb.collection("users").doc(window._fbUid).collection("data").doc(encodeURIComponent(k)).set({ v: JSON.stringify(v) }, { merge: true }).catch(() => {
+        });
+      }
     }
   }
 };
@@ -705,6 +709,7 @@ function Auth({ onLogin }) {
       const ud = { username: user.trim(), displayName: user.trim(), avatar: photo || av, isDev: false, isGymBro: false, createdAt: Date.now() };
       await window._fbDb.collection("users").doc(uid).set(ud);
       const u2 = user.trim();
+      window._fbCurrentUsername = u2;
       sto.set(`gym_${u2}_dark`, false);
       sto.set(`gym_${u2}_theme`, "orange");
       sto.set(`gym_${u2}_workouts`, []);
@@ -722,6 +727,7 @@ function Auth({ onLogin }) {
       usersMap[u2] = __spreadValues({}, ud);
       sto.set("gym_users", usersMap);
       sto.set("gym_currentUser", u2);
+      window._fbCurrentUsername = u2;
       onLogin(u2);
     } catch (e) {
       setErr(e.code === "auth/email-already-in-use" ? "E-Mail bereits registriert" : e.message);
@@ -753,6 +759,7 @@ function Auth({ onLogin }) {
       usersMap[u2] = profile;
       sto.set("gym_users", usersMap);
       sto.set("gym_currentUser", u2);
+      window._fbCurrentUsername = u2;
       onLogin(u2);
     } catch (e) {
       setErr(e.code === "auth/invalid-credential" ? "Falsche E-Mail oder Passwort" : e.message);
@@ -1091,6 +1098,20 @@ function FriendsModal({ t, S, cu: cu2, onClose, onFriendsChanged }) {
     saveFriends(myF);
     const theirF = [.../* @__PURE__ */ new Set([...sto.get(`gym_${from}_friends`, []), cu2])];
     sto.set(`gym_${from}_friends`, theirF);
+    if (window._fbDb) {
+      (async () => {
+        try {
+          const usnap = await window._fbDb.collection("usernames").doc(from.toLowerCase()).get();
+          if (usnap.exists) {
+            const uid = usnap.data().uid;
+            const key = encodeURIComponent(`gym_${from}_friends`);
+            await window._fbDb.collection("users").doc(uid).collection("data").doc(key).set({ v: JSON.stringify(theirF) }, { merge: true });
+          }
+        } catch (e) {
+          console.warn("Cross-user friends write failed:", e);
+        }
+      })();
+    }
     refresh();
   };
   const rejectRequest = (from) => {
@@ -2328,6 +2349,7 @@ ReactDOM.render(/* @__PURE__ */ React.createElement(App, null), document.getElem
 
 })();
 </script>
+
 
 
 
