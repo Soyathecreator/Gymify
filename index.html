@@ -955,17 +955,49 @@ function ProfileModal({ t, S, cu, level, li, xpProg, xp, onClose, onDeleted, onU
       flash("\u{1F3C6} Gym Bro Status aktiviert!");
     } else flash("Ung\xFCltiger Code.", false);
   };
-  const delAccount = () => {
-    if (ud.pw !== hashPW(delPw)) {
-      flash("Falsches Passwort.", false);
+  const delAccount = async () => {
+    if (!delPw) {
+      flash("Bitte Passwort eingeben.", false);
       return;
     }
-    const us = sto.get("gym_users", {});
-    delete us[cu];
-    sto.set("gym_users", us);
-    sto.set("gym_currentUser", null);
-    Object.keys(localStorage).filter((k) => k.startsWith(`gym_${cu}_`)).forEach((k) => localStorage.removeItem(k));
-    onDeleted();
+    try {
+      const user = firebase.auth().currentUser;
+      if (user) {
+        const cred = firebase.auth.EmailAuthProvider.credential(user.email, delPw);
+        await user.reauthenticateWithCredential(cred);
+        if (window._fbDb && window._fbUid) {
+          const uid = window._fbUid;
+          await window._fbDb.collection("usernames").doc(cu.toLowerCase()).delete().catch(() => {
+          });
+          const dataSnap = await window._fbDb.collection("users").doc(uid).collection("data").get().catch(() => ({ docs: [] }));
+          for (const d of dataSnap.docs) {
+            await d.ref.delete().catch(() => {
+            });
+          }
+          await window._fbDb.collection("users").doc(uid).delete().catch(() => {
+          });
+          const sentSnap = await window._fbDb.collection("friendRequests").where("from", "==", cu).get().catch(() => ({ docs: [] }));
+          const recvSnap = await window._fbDb.collection("friendRequests").where("to", "==", cu).get().catch(() => ({ docs: [] }));
+          for (const d of [...sentSnap.docs, ...recvSnap.docs]) {
+            await d.ref.delete().catch(() => {
+            });
+          }
+        }
+        await user.delete();
+      }
+      const us = sto.get("gym_users", {});
+      delete us[cu];
+      sto.set("gym_users", us);
+      sto.set("gym_currentUser", null);
+      Object.keys(localStorage).filter((k) => k.startsWith(`gym_${cu}_`)).forEach((k) => localStorage.removeItem(k));
+      onDeleted();
+    } catch (e) {
+      if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential") {
+        flash("Falsches Passwort.", false);
+      } else {
+        flash("Fehler: " + e.message, false);
+      }
+    }
   };
   const i2 = { background: t.card2, border: `1px solid ${t.border}`, borderRadius: 10, padding: "10px 14px", fontSize: 14, color: t.text, width: "100%", outline: "none", boxSizing: "border-box" };
   const GB = ({ children, onClick, style, disabled }) => /* @__PURE__ */ React.createElement("button", { className: "gBtn", "data-rc": "rgba(255,255,255,.2)", disabled, onMouseDown: (e) => {
@@ -2425,6 +2457,8 @@ ReactDOM.render(/* @__PURE__ */ React.createElement(App, null), document.getElem
 
 })();
 </script>
+
+
 
 
 
