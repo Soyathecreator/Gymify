@@ -195,25 +195,14 @@ rect.recharts-rectangle[class*="background"]{fill:transparent!important;opacity:
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       width: 100%; height: 100%;
-      background: #f4f3ef;
+      background: #ffffff;
       overflow: hidden;
       overscroll-behavior: none;
     }
     @media (prefers-color-scheme: dark) {
       html, body, #root { background: #1c1c1e; }
     }
-    /* iOS status bar top fill */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: env(safe-area-inset-top);
-      background: #f4f3ef;
-      z-index: 9999;
-    }
-    @media (prefers-color-scheme: dark) {
-      body::before { background: #0d0d0d; }
-    }
+    /* Top safe area handled by header paddingTop */
   </style>
 </head>
 <body>
@@ -1334,8 +1323,10 @@ function App() {
   const [dark, setDark] = useState(() => sto.get(cu ? `gym_${cu}_dark` : "gym_dark", false));
   const [themeKey, setThemeKey] = useState(() => sto.get(cu ? `gym_${cu}_theme` : "gym_theme", "orange"));
   useEffect(() => {
-    document.body.style.background = dark ? "#1c1c1e" : "#f4f3ef";
-    document.documentElement.style.background = dark ? "#1c1c1e" : "#f4f3ef";
+    const card = dark ? "#1c1c1e" : "#ffffff";
+    document.body.style.background = card;
+    document.documentElement.style.background = card;
+    document.getElementById("root").style.background = card;
   }, [dark]);
   const [tab, setTab] = useState("home");
   const cuRef = useRef(cu);
@@ -2434,6 +2425,8 @@ ReactDOM.render(/* @__PURE__ */ React.createElement(App, null), document.getElem
 
 })();
 </script>
+
+
 
 
 
