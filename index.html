@@ -1580,8 +1580,8 @@ function App() {
   const t = { bg: dark ? "#0d0d0d" : "#f4f3ef", card: dark ? "#1c1c1e" : "#fff", card2: dark ? "#252527" : "#f0ede8", border: dark ? "#2c2c2e" : "#e5e0d8", text: dark ? "#f2f2f7" : "#1c1c1e", muted: dark ? "#636366" : "#8e8e93", a: theme.a, b: theme.b };
   const S = {
     app: { fontFamily: "-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif", background: t.bg, color: t.text, height: "100dvh", maxHeight: "100dvh", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column", overflow: "hidden" },
-    scroll: { overflowY: "auto", flex: 1, paddingBottom: 90, height: "100%" },
-    tabBar: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: t.card, borderTop: `1px solid ${t.border}`, display: "flex", padding: "8px 0 20px", zIndex: 50 },
+    scroll: { overflowY: "auto", flex: 1, paddingBottom: "calc(90px + env(safe-area-inset-bottom))", height: "100%" },
+    tabBar: { position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: t.card, borderTop: `1px solid ${t.border}`, display: "flex", padding: `8px 0 calc(max(20px, env(safe-area-inset-bottom)))`, zIndex: 50 },
     tabBtn: (active) => ({ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, border: "none", background: "none", cursor: "pointer", padding: "5px 0", color: active ? t.a : t.muted, transition: "color .15s" }),
     tabLbl: { fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase" },
     card: { background: t.card, borderRadius: 18, padding: 18, marginBottom: 12, border: `1px solid ${t.border}` },
@@ -2406,6 +2406,7 @@ ReactDOM.render(/* @__PURE__ */ React.createElement(App, null), document.getElem
 
 })();
 </script>
+
 
 
 
