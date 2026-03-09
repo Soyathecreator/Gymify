@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="mobile-web-app-capable" content="yes"/>
-<meta name="theme-color" content="#090e18"/>
+
 <title>Gymify Fitness</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,7 +14,7 @@
 <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;min-height:-webkit-fill-available;background:#0d0d0d;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif}
+html,body{height:100%;min-height:-webkit-fill-available;background:#1c1c1e;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif}
 input,button,textarea{font-family:inherit;color:inherit}
 input::placeholder{opacity:.5}
 input:-webkit-autofill{-webkit-text-fill-color:inherit!important}
@@ -195,7 +195,7 @@ rect.recharts-rectangle[class*="background"]{fill:transparent!important;opacity:
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       width: 100%; height: 100%;
-      background: #0d0d0d;
+      background: #1c1c1e;
       overflow: hidden;
       overscroll-behavior: none;
     }
@@ -661,7 +661,7 @@ function Splash({ onDone }) {
     }, 25);
     return () => clearInterval(iv);
   }, []);
-  return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#000", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 999, opacity: fade ? 0 : 1, transition: "opacity .7s ease" } }, /* @__PURE__ */ React.createElement(GymLogo, { size: 360 }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 48, width: 36, height: 36, borderRadius: "50%", border: "3px solid rgba(255,255,255,.12)", borderTopColor: "#2dd4bf", animation: "spin .8s linear infinite" } }));
+  return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 999, opacity: fade ? 0 : 1, transition: "opacity .7s ease" } }, /* @__PURE__ */ React.createElement(GymLogo, { size: 360 }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 48, width: 36, height: 36, borderRadius: "50%", border: "3px solid rgba(255,255,255,.12)", borderTopColor: "#2dd4bf", animation: "spin .8s linear infinite" } }));
 }
 function Auth({ onLogin }) {
   const [mode, setMode] = useState("login");
@@ -2424,6 +2424,7 @@ ReactDOM.render(/* @__PURE__ */ React.createElement(App, null), document.getElem
 
 })();
 </script>
+
 
 
 
