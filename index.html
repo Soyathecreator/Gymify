@@ -1358,6 +1358,20 @@ function FriendsModal({ t, S, cu, onClose, onFriendsChanged }) {
   const loadRequests = async () => {
     if (!window._fbDb) return;
     try {
+      // Prüfe ob eigene gesendete Anfragen akzeptiert wurden → Freund hinzufügen
+      const acceptedSnap = await window._fbDb.collection("friendRequests")
+        .where("from", "==", cu).where("status", "==", "accepted").get().catch(() => ({ docs: [] }));
+      if (!acceptedSnap.docs || acceptedSnap.docs.length > 0) {
+        const currentF = sto.get(`gym_${cu}_friends`, []);
+        let updated = [...currentF];
+        for (const d of (acceptedSnap.docs || [])) {
+          const to = d.data().to;
+          if (to && !updated.includes(to)) updated.push(to);
+          // Dokument löschen nachdem verarbeitet
+          await d.ref.delete().catch(() => {});
+        }
+        if (updated.length !== currentF.length) saveFriends(updated);
+      }
       const snap = await window._fbDb.collection("friendRequests").where("status", "==", "pending").get();
       const inc = [], out = [];
       snap.forEach((d) => {
@@ -1403,18 +1417,14 @@ function FriendsModal({ t, S, cu, onClose, onFriendsChanged }) {
     if (!window._fbDb) return;
     const docId = `${from}__${cu}`;
     try {
-      await window._fbDb.collection("friendRequests").doc(docId).update({ status: "accepted" });
-      const myF = [.../* @__PURE__ */ new Set([...friends, from])];
+      // Eigene Freundesliste aktualisieren
+      const myF = [...new Set([...friends, from])];
       saveFriends(myF);
-      const usnap = await window._fbDb.collection("usernames").doc(from.toLowerCase()).get();
-      if (usnap.exists) {
-        const uid = usnap.data().uid;
-        const theirFriendsSnap = await window._fbDb.collection("users").doc(uid).collection("data").doc(encodeURIComponent(`gym_${from}_friends`)).get();
-        const theirF = theirFriendsSnap.exists ? JSON.parse(theirFriendsSnap.data().v || "[]") : [];
-        const newTheirF = [.../* @__PURE__ */ new Set([...theirF, cu])];
-        await window._fbDb.collection("users").doc(uid).collection("data").doc(encodeURIComponent(`gym_${from}_friends`)).set({ v: JSON.stringify(newTheirF) }, { merge: true });
-        sto.set(`gym_${from}_friends`, newTheirF);
-      }
+      // friendRequest-Dokument als "accepted" markieren (Randy liest das beim nächsten Laden)
+      // Wir schreiben nur in das Dokument das WIR besitzen als Empfänger
+      await window._fbDb.collection("friendRequests").doc(docId).set({
+        from, to: cu, status: "accepted", acceptedAt: Date.now()
+      });
       setIncoming((p) => p.filter((r) => r.from !== from));
     } catch (e) {
       console.warn("acceptRequest failed:", e);
