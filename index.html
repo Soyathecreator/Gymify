@@ -753,6 +753,79 @@ function Splash({ onDone }) {
   }, []);
   return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 999, opacity: fade ? 0 : 1, transition: "opacity .7s ease" } }, /* @__PURE__ */ React.createElement(GymLogo, { size: 360 }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 48, width: 36, height: 36, borderRadius: "50%", border: "3px solid rgba(255,255,255,.12)", borderTopColor: "#2dd4bf", animation: "spin .8s linear infinite" } }));
 }
+
+const TOS_VERSION = "1.0";
+const TOS_TEXT = `Nutzungsbedingungen – Gymify Fitness
+Letzte Aktualisierung: Juni 2025
+Erstellt von: Soyathecreator / Michael Rohner
+
+1. Urheberrecht & geistiges Eigentum
+Sämtlicher Code, das UI-Design, alle Logos, Grafiken, Funktionen und sonstige Bestandteile der App «Gymify Fitness» sind urheberrechtlich geschütztes Eigentum von Soyathecreator / Michael Rohner. Jegliche Vervielfältigung, Weiterverbreitung oder kommerzielle Nutzung ohne ausdrückliche schriftliche Genehmigung ist untersagt.
+
+2. Betrieb & Verfügbarkeit
+Der Betreiber behält sich das Recht vor, jederzeit und ohne Angabe von Gründen: Nutzerkonten und alle damit verbundenen Daten zu löschen, Nutzer dauerhaft oder vorübergehend zu sperren, die App einzustellen, offline zu nehmen oder in ihrem Umfang zu verändern. Ein Anspruch auf dauerhafte Verfügbarkeit der App oder der gespeicherten Daten besteht nicht.
+
+3. Haftungsausschluss
+Die Nutzung der App erfolgt auf eigene Gefahr. Der Betreiber übernimmt keinerlei Haftung für: Verlust von Trainingsdaten oder Fortschritten, unerwartete Löschung von Konten oder Inhalten, technische Fehler, Ausfälle oder Datenverluste, direkte oder indirekte Schäden, die durch die Nutzung oder Nichtnutzung der App entstehen. Es wird keine Garantie für die dauerhafte Speicherung von Daten gegeben.
+
+4. Datenspeicherung & Akzeptanz
+Mit der Registrierung bzw. der Bestätigung dieser Nutzungsbedingungen erklärt sich der Nutzer ausdrücklich einverstanden. Zeitpunkt und Tatsache der Zustimmung werden serverseitig gespeichert und können im Streitfall als Nachweis herangezogen werden.
+
+5. Änderungen
+Der Betreiber behält sich vor, diese Nutzungsbedingungen jederzeit zu ändern. Wesentliche Änderungen werden den Nutzern in der App mitgeteilt.`;
+
+function TosModal({ onAccept, onDecline, dark }) {
+  const [scrolled, setScrolled] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const scrollRef = useRef();
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20) setScrolled(true);
+  };
+  const bg = dark ? "#0d0d0d" : "#f4f3ef";
+  const card = dark ? "#1c1c1e" : "#ffffff";
+  const text = dark ? "#f2f2f7" : "#1c1c1e";
+  const muted = dark ? "#8e8e93" : "#8e8e93";
+  const accent = "#f97316";
+  return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 9999, display: "flex", alignItems: "flex-end", justifyContent: "center" } },
+    React.createElement("div", { style: { width: "100%", maxWidth: 480, background: card, borderRadius: "22px 22px 0 0", padding: "24px 20px 40px", maxHeight: "92vh", display: "flex", flexDirection: "column", animation: "sheetUp .34s cubic-bezier(.32,.72,0,1)" } },
+      React.createElement("div", { style: { textAlign: "center", marginBottom: 16 } },
+        React.createElement("div", { style: { fontSize: 28, marginBottom: 6 } }, "📋"),
+        React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: text } }, "Nutzungsbedingungen"),
+        React.createElement("div", { style: { fontSize: 12, color: muted, marginTop: 3 } }, "Bitte lies und akzeptiere die Bedingungen um fortzufahren.")
+      ),
+      React.createElement("div", {
+        ref: scrollRef,
+        onScroll: handleScroll,
+        style: { flex: 1, overflowY: "auto", background: dark ? "#141414" : "#f8f7f4", borderRadius: 14, padding: "14px 16px", marginBottom: 16, fontSize: 12.5, color: text, lineHeight: 1.7, border: `1px solid ${dark ? "#2c2c2e" : "#e0ddd8"}`, whiteSpace: "pre-wrap" }
+      }, TOS_TEXT),
+      !scrolled && React.createElement("div", { style: { textAlign: "center", fontSize: 11, color: muted, marginBottom: 8 } }, "⬇ Scrolle bis zum Ende um fortzufahren"),
+      React.createElement("label", { style: { display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 16, cursor: scrolled ? "pointer" : "default", opacity: scrolled ? 1 : 0.4 } },
+        React.createElement("input", {
+          type: "checkbox",
+          checked,
+          disabled: !scrolled,
+          onChange: e => setChecked(e.target.checked),
+          style: { marginTop: 2, accentColor: accent, width: 17, height: 17, flexShrink: 0 }
+        }),
+        React.createElement("span", { style: { fontSize: 12.5, color: text, lineHeight: 1.5 } },
+          "Ich habe die Nutzungsbedingungen gelesen und akzeptiere diese vollständig. Ich verstehe, dass Soyathecreator / Michael Rohner alle Rechte an der App behält."
+        )
+      ),
+      React.createElement("button", {
+        onClick: () => checked && onAccept(),
+        disabled: !checked,
+        style: { width: "100%", background: checked ? accent : "#555", border: "none", borderRadius: 14, padding: "14px", fontSize: 15, fontWeight: 700, color: "#fff", cursor: checked ? "pointer" : "not-allowed", marginBottom: 10, transition: "background .2s" }
+      }, "✓ Akzeptieren & Fortfahren"),
+      React.createElement("button", {
+        onClick: onDecline,
+        style: { width: "100%", background: "none", border: "1px solid #ef444444", borderRadius: 14, padding: "12px", fontSize: 14, color: "#ef4444", cursor: "pointer" }
+      }, "Ablehnen & Konto löschen")
+    )
+  );
+}
+
 function Auth({ onLogin }) {
   const [mode, setMode] = useState("login");
   const [user, setUser] = useState("");
@@ -766,6 +839,10 @@ function Auth({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [cropSrc, setCropSrc] = useState(null);
+  const [tosAccepted, setTosAccepted] = useState(false);
+  const [showTos, setShowTos] = useState(false);
+  const [pendingRegData, setPendingRegData] = useState(null);
+  const [pendingLoginData, setPendingLoginData] = useState(null);
   const fRef = useRef();
   const AVATARS2 = ["\u{1F4AA}", "\u{1F3CB}\uFE0F", "\u{1F525}", "\u26A1", "\u{1F3C3}", "\u{1F94A}", "\u{1F3C5}", "\u{1F9E0}", "\u{1F981}", "\u{1F43A}", "\u{1F3AF}", "\u{1F48E}"];
   const onFile = (e) => {
@@ -800,24 +877,33 @@ function Auth({ onLogin }) {
       setErr("Passwort min. 6 Zeichen");
       return;
     }
+    // Show ToS first – actual registration happens in doRegAfterTos
+    setPendingRegData({ user: user.trim(), email: email.trim(), pw, av, photo });
+    setShowTos(true);
+    return;
+  };
+  const doRegAfterTos = async () => {
+    const { user: u2name, email: em, pw: password, av: avatar, photo: ph } = pendingRegData;
+    setShowTos(false);
     setLoading(true);
     setErr("");
     try {
       const { createUserWithEmailAndPassword } = window._fbAuth2;
-      const cred = await createUserWithEmailAndPassword(window._fbAuthInst, email.trim(), pw);
+      const cred = await createUserWithEmailAndPassword(window._fbAuthInst, em.trim(), password);
       const uid = cred.user.uid;
       window._fbUid = uid;
-      const { doc, setDoc } = window._fbFirestore;
-      const unameSnap = await window._fbDb.collection("usernames").doc(user.trim().toLowerCase()).get();
+      const unameSnap = await window._fbDb.collection("usernames").doc(u2name.toLowerCase()).get();
       if (unameSnap.exists) {
         setErr("Benutzername bereits vergeben");
         setLoading(false);
+        await cred.user.delete().catch(() => {});
         return;
       }
-      await window._fbDb.collection("usernames").doc(user.trim().toLowerCase()).set({ uid, username: user.trim() });
-      const ud = { username: user.trim(), displayName: user.trim(), avatar: av, photo: photo || null, isDev: false, isGymBro: false, createdAt: Date.now() };
+      const tosTs = Date.now();
+      await window._fbDb.collection("usernames").doc(u2name.toLowerCase()).set({ uid, username: u2name });
+      const ud = { username: u2name, displayName: u2name, avatar: avatar, photo: ph || null, isDev: false, isGymBro: false, createdAt: new Date(tosTs).toISOString().split("T")[0], tosAccepted: tosTs, tosVersion: TOS_VERSION };
       await window._fbDb.collection("users").doc(uid).set(ud);
-      const u2 = user.trim();
+      const u2 = u2name;
       window._fbCurrentUsername = u2;
       sto.set(`gym_${u2}_dark`, false);
       sto.set(`gym_${u2}_theme`, "orange");
@@ -869,12 +955,61 @@ function Auth({ onLogin }) {
       sto.set("gym_users", usersMap);
       sto.set("gym_currentUser", u2);
       window._fbCurrentUsername = u2;
+      // Check if user has accepted current ToS version
+      if (!profile.tosAccepted || profile.tosVersion !== TOS_VERSION) {
+        setPendingLoginData({ uid, u2, cred: cred.user });
+        setShowTos(true);
+        setLoading(false);
+        return;
+      }
       onLogin(u2);
     } catch (e) {
       setErr(e.code === "auth/invalid-credential" ? "Falsche E-Mail oder Passwort" : e.message);
     }
     setLoading(false);
   };
+  const acceptTosForLogin = async () => {
+    if (!pendingLoginData) return;
+    const { uid, u2 } = pendingLoginData;
+    setShowTos(false);
+    try {
+      const tosTs = Date.now();
+      await window._fbDb.collection("users").doc(uid).update({ tosAccepted: tosTs, tosVersion: TOS_VERSION }).catch(() => {});
+      const usersMap = sto.get("gym_users", {});
+      if (usersMap[u2]) { usersMap[u2].tosAccepted = tosTs; usersMap[u2].tosVersion = TOS_VERSION; }
+      sto.set("gym_users", usersMap);
+      onLogin(u2);
+    } catch(e) { setErr("Fehler beim Speichern der Zustimmung."); }
+  };
+  const declineTosForLogin = async () => {
+    if (!pendingLoginData) return;
+    const { uid, u2, cred } = pendingLoginData;
+    setShowTos(false);
+    // Delete all data and auth account
+    try {
+      await window._fbDb.collection("usernames").doc(u2.toLowerCase()).delete().catch(() => {});
+      const dataSnap = await window._fbDb.collection("users").doc(uid).collection("data").get().catch(() => ({ docs: [] }));
+      for (const d of dataSnap.docs) await d.ref.delete().catch(() => {});
+      await window._fbDb.collection("users").doc(uid).delete().catch(() => {});
+      await cred.delete().catch(() => {});
+    } catch(e) {}
+    sto.set("gym_currentUser", null);
+    window._fbUid = null;
+    window._fbCurrentUsername = null;
+    setErr("Konto wurde gelöscht, da die Nutzungsbedingungen nicht akzeptiert wurden.");
+    setPendingLoginData(null);
+  };
+  if (showTos) return React.createElement(TosModal, {
+    dark: false,
+    onAccept: () => {
+      if (pendingRegData) { setShowTos(false); doRegAfterTos(); }
+      else if (pendingLoginData) { acceptTosForLogin(); }
+    },
+    onDecline: () => {
+      if (pendingRegData) { setShowTos(false); setPendingRegData(null); }
+      else if (pendingLoginData) { declineTosForLogin(); }
+    }
+  });
   if (cropSrc) return /* @__PURE__ */ React.createElement(ImageCropper, { src: cropSrc, onSave: (img) => {
     setPhoto(img);
     setCropSrc(null);
@@ -970,6 +1105,9 @@ function ProfileModal({ t, S, cu, level, li, xpProg, xp, onClose, onDeleted, onU
     Object.assign(us[cu], patch);
     sto.set("gym_users", us);
     setUd((u) => __spreadValues(__spreadValues({}, u), patch));
+    if (window._fbDb && window._fbUid) {
+      window._fbDb.collection("users").doc(window._fbUid).update(patch).catch(() => {});
+    }
   };
   const onFile = (e) => {
     const f = e.target.files[0];
@@ -1065,25 +1203,35 @@ function ProfileModal({ t, S, cu, level, li, xpProg, xp, onClose, onDeleted, onU
       if (user) {
         const cred = firebase.auth.EmailAuthProvider.credential(user.email, delPw);
         await user.reauthenticateWithCredential(cred);
-        if (window._fbDb && window._fbUid) {
-          const uid = window._fbUid;
-          await window._fbDb.collection("usernames").doc(cu.toLowerCase()).delete().catch(() => {
-          });
-          const dataSnap = await window._fbDb.collection("users").doc(uid).collection("data").get().catch(() => ({ docs: [] }));
-          for (const d of dataSnap.docs) {
-            await d.ref.delete().catch(() => {
-            });
-          }
-          await window._fbDb.collection("users").doc(uid).delete().catch(() => {
-          });
-          const sentSnap = await window._fbDb.collection("friendRequests").where("from", "==", cu).get().catch(() => ({ docs: [] }));
-          const recvSnap = await window._fbDb.collection("friendRequests").where("to", "==", cu).get().catch(() => ({ docs: [] }));
-          for (const d of [...sentSnap.docs, ...recvSnap.docs]) {
-            await d.ref.delete().catch(() => {
-            });
-          }
+        // uid VOR allem sichern, da window._fbUid später null werden könnte
+        const uid = window._fbUid || user.uid;
+        const db = window._fbDb;
+        if (db && uid) {
+          // 1. usernames freigeben (blockiert sonst den Username)
+          await db.collection("usernames").doc(cu.toLowerCase()).delete().catch((e) => console.warn("del usernames:", e));
+          // 2. user/data subcollection löschen
+          try {
+            const dataSnap = await db.collection("users").doc(uid).collection("data").get();
+            await Promise.all(dataSnap.docs.map((d) => d.ref.delete()));
+          } catch(e) { console.warn("del user/data:", e); }
+          // 3. users/{uid} Hauptdokument löschen
+          await db.collection("users").doc(uid).delete().catch((e) => console.warn("del users doc:", e));
+          // 4. Freundschaftsanfragen bereinigen
+          try {
+            const [sentSnap, recvSnap] = await Promise.all([
+              db.collection("friendRequests").where("from", "==", cu).get(),
+              db.collection("friendRequests").where("to", "==", cu).get()
+            ]);
+            await Promise.all([...sentSnap.docs, ...recvSnap.docs].map((d) => d.ref.delete()));
+          } catch(e) { console.warn("del friendRequests:", e); }
         }
+        // Auth-User löschen – gibt die E-Mail frei
         await user.delete();
+        if (window._fbAuthInst && window._fbAuth2) {
+          await window._fbAuth2.signOut(window._fbAuthInst).catch(() => {});
+        }
+        window._fbUid = null;
+        window._fbCurrentUsername = null;
       }
       const us = sto.get("gym_users", {});
       delete us[cu];
@@ -1092,7 +1240,9 @@ function ProfileModal({ t, S, cu, level, li, xpProg, xp, onClose, onDeleted, onU
       Object.keys(localStorage).filter((k) => k.startsWith(`gym_${cu}_`)).forEach((k) => localStorage.removeItem(k));
       onDeleted();
     } catch (e) {
-      if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential") {
+      if (e.code === "auth/requires-recent-login") {
+        flash("Bitte erneut anmelden und dann nochmal versuchen.", false);
+      } else if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential") {
         flash("Falsches Passwort.", false);
       } else {
         flash("Fehler: " + e.message, false);
@@ -1116,7 +1266,7 @@ function ProfileModal({ t, S, cu, level, li, xpProg, xp, onClose, onDeleted, onU
   }, style: { marginLeft: 10, fontSize: 11, background: "none", border: "none", cursor: "pointer", color: t.muted, textDecoration: "underline" } }, "entfernen")) : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { flex: 1 }), placeholder: "Code eingeben\u2026", value: code, onChange: (e) => setCode(e.target.value), onKeyDown: (e) => e.key === "Enter" && redeemCode() }), /* @__PURE__ */ React.createElement(GB, { onClick: redeemCode, style: { background: t.a, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 13 } }, "OK"))), !confDel ? /* @__PURE__ */ React.createElement(GB, { onClick: () => setConfDel(true), style: { width: "100%", background: "none", border: "1px solid #ef444444", borderRadius: 12, padding: "12px", fontSize: 14, color: "#ef4444", marginBottom: 10 } }, /* @__PURE__ */ React.createElement(Icon, { name: "trash", size: 15, color: "#ef4444" }), "Konto l\xF6schen") : /* @__PURE__ */ React.createElement("div", { style: { background: "#ef444413", border: "1px solid #ef444444", borderRadius: 14, padding: 14, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#ef4444", marginBottom: 9 } }, "\u26A0\uFE0F Wirklich l\xF6schen? Alle Daten gehen verloren!"), /* @__PURE__ */ React.createElement("input", { style: __spreadProps(__spreadValues({}, i2), { marginBottom: 8 }), type: "password", placeholder: "Passwort best\xE4tigen", value: delPw, onChange: (e) => setDelPw(e.target.value) }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement(GB, { onClick: delAccount, style: { flex: 1, background: "#ef4444", borderRadius: 10, padding: "11px", color: "#fff", fontSize: 14 } }, "L\xF6schen"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
     setConfDel(false);
     setDelPw("");
-  }, style: { flex: 1, background: t.card2, border: `1px solid ${t.border}`, borderRadius: 10, padding: "11px", color: t.text, fontWeight: 700, cursor: "pointer", fontSize: 14 } }, "Abbrechen"))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, textAlign: "center", marginBottom: 8 } }, "Konto erstellt: ", ud.createdAt || "\u2013")));
+  }, style: { flex: 1, background: t.card2, border: `1px solid ${t.border}`, borderRadius: 10, padding: "11px", color: t.text, fontWeight: 700, cursor: "pointer", fontSize: 14 } }, "Abbrechen"))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, textAlign: "center", marginBottom: 8 } }, "Konto erstellt: ", (() => { const v = ud.createdAt; if (!v) return "–"; if (typeof v === "number" || (typeof v === "string" && /^\d{10,}$/.test(v))) return new Date(Number(v)).toLocaleDateString("de-CH"); return v; })())));
 }
 const calcStreak = (completed) => {
   let s = 0;
@@ -1263,6 +1413,7 @@ function FriendsModal({ t, S, cu, onClose, onFriendsChanged }) {
         const theirF = theirFriendsSnap.exists ? JSON.parse(theirFriendsSnap.data().v || "[]") : [];
         const newTheirF = [.../* @__PURE__ */ new Set([...theirF, cu])];
         await window._fbDb.collection("users").doc(uid).collection("data").doc(encodeURIComponent(`gym_${from}_friends`)).set({ v: JSON.stringify(newTheirF) }, { merge: true });
+        sto.set(`gym_${from}_friends`, newTheirF);
       }
       setIncoming((p) => p.filter((r) => r.from !== from));
     } catch (e) {
@@ -1437,6 +1588,9 @@ function SettingsModal({ t, S, dark, setDark, themeKey, setThemeKey, cu, onLogou
     Object.assign(us[cu], patch);
     sto.set("gym_users", us);
     setUd((u) => __spreadValues(__spreadValues({}, u), patch));
+    if (window._fbDb && window._fbUid) {
+      window._fbDb.collection("users").doc(window._fbUid).update(patch).catch(() => {});
+    }
   };
   const onFile = (e) => {
     const f = e.target.files[0];
@@ -1495,6 +1649,7 @@ function App() {
     const u = cuRef.current;
     const nv = typeof v === "function" ? v(rotIdxRef.current) : v;
     if (u) sto.set(`gym_${u}_rotidx`, nv);
+    rotIdxRef.current = nv;
     setRotIdxRaw(nv);
   };
   const setRotMode = (v) => {
@@ -2289,11 +2444,10 @@ function WorkoutsTab({ t, S, workouts, setWorkouts, rotIdx, setRotIdx, rotMode, 
     {
       key: m.key,
       onClick: () => setRotMode(m.key),
-      style: { flex: 1, background: rotMode === m.key ? t.a + "18" : t.card2, border: rotMode === m.key ? `2px solid ${t.a}` : `1px solid ${t.border}`, borderRadius: 12, padding: "10px 12px", cursor: "pointer", textAlign: "left", transition: "all .15s" }
+      style: { flex: 1, background: rotMode === m.key ? t.a + "18" : t.card2, border: rotMode === m.key ? `2px solid ${t.a}` : `1px solid ${t.border}`, borderRadius: 12, padding: "7px 10px", cursor: "pointer", textAlign: "left", transition: "all .15s" }
     },
-    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, marginBottom: 4 } }, m.icon),
-    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: rotMode === m.key ? t.a : t.text, marginBottom: 2 } }, m.label),
-    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: t.muted, lineHeight: 1.4 } }, m.desc)
+    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, marginBottom: 2 } }, m.icon, " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: rotMode === m.key ? t.a : t.text } }, m.label)),
+    /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: t.muted, lineHeight: 1.3 } }, m.desc)
   ))))), editWk && /* @__PURE__ */ React.createElement(
     WorkoutEditModal,
     {
