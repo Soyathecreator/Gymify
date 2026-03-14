@@ -114,6 +114,34 @@ rect.recharts-rectangle[class*="background"]{fill:transparent!important;opacity:
       signInWithEmailAndPassword: (auth, email, pw) => firebase.auth().signInWithEmailAndPassword(email, pw),
       signOut: (auth) => firebase.auth().signOut()
     };
+    // Restore session on page reload: load Firestore data and set globals
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) { window._fbUid = null; window._fbCurrentUsername = null; return; }
+      try {
+        window._fbUid = user.uid;
+        const profileSnap = await window._fbDb.collection("users").doc(user.uid).get();
+        if (!profileSnap.exists) return;
+        const profile = profileSnap.data();
+        const u2 = profile.username;
+        window._fbCurrentUsername = u2;
+        // Load all user data from Firestore into localStorage
+        const snap = await window._fbDb.collection("users").doc(user.uid).collection("data").get();
+        snap.forEach((d) => {
+          try {
+            const k = decodeURIComponent(d.id);
+            const v = JSON.parse(d.data().v);
+            localStorage.setItem(k, JSON.stringify(v));
+          } catch(e) {}
+        });
+        // Update users map
+        const usersMap = JSON.parse(localStorage.getItem("gym_users") || "{}");
+        usersMap[u2] = profile;
+        localStorage.setItem("gym_users", JSON.stringify(usersMap));
+        localStorage.setItem("gym_currentUser", JSON.stringify(u2));
+        // Notify the React app to reload data if it's already mounted
+        if (window._gymifyReloadUser) window._gymifyReloadUser(u2);
+      } catch(e) { console.warn("onAuthStateChanged error:", e); }
+    });
     // Expose Firestore functions (compatible with the modular API calls in app.jsx)
     window._fbFirestore = {
       doc: (db, ...path) => {
@@ -1803,6 +1831,11 @@ function App() {
   }, [tab]);
   useEffect(() => {
     if (cu) login(cu);
+    // Register callback so onAuthStateChanged can reload data after page refresh
+    window._gymifyReloadUser = (u) => {
+      if (u) login(u);
+    };
+    return () => { window._gymifyReloadUser = null; };
   }, []);
   const login = (u) => {
     cuRef.current = u;
@@ -1841,16 +1874,18 @@ function App() {
     setCalLogRaw(cl);
   };
   const logout = async () => {
-    if (window._fbAuthInst && window._fbAuth2) {
-      try {
-        await window._fbAuth2.signOut(window._fbAuthInst);
-      } catch (e) {
-      }
-    }
+    window._fbCurrentUsername = null;
     window._fbUid = null;
+    if (window._fbAuthInst && window._fbAuth2) {
+      try { await window._fbAuth2.signOut(window._fbAuthInst); } catch (e) {}
+    }
     sto.set("gym_currentUser", null);
     setCu(null);
     setShowSets(false);
+    // Reset all state to empty
+    setWorkoutsRaw([]); setCompletedRaw({}); setTrackDataRaw({});
+    setXpRaw(0); setDoneChalsRaw([]); setRotCountRaw(0);
+    setWaterLogRaw({}); setCalLogRaw({});
   };
   const cw = workouts.length > 0 ? workouts[rotIdx % workouts.length] : null;
   const todayDone = rotMode === "daily" ? !!completed[todayStr()] : completed[todayStr()] === (cw == null ? void 0 : cw.id);
