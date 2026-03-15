@@ -1302,24 +1302,31 @@ function ProfileModal({ t, S, cu, level, li, xpProg, xp, onClose, onDeleted, onU
 
 
 }
+const getMonday = (d) => {
+  const dt = new Date(d + "T12:00:00");
+  const day = dt.getDay();
+  dt.setDate(dt.getDate() + (day === 0 ? -6 : 1 - day));
+  return dt.toISOString().split("T")[0];
+};
 const calcStreak = (completed) => {
   const dates = Object.keys(completed).filter(d => !!completed[d]).sort();
   if (!dates.length) return 0;
   const today = todayStr();
+  const currentWeekMon = getMonday(today);
+  const prevWeekMon = (() => { const dt = new Date(currentWeekMon + "T12:00:00"); dt.setDate(dt.getDate() - 7); return dt.toISOString().split("T")[0]; })();
+  const trainedWeeks = new Set(dates.map(d => getMonday(d)));
+  if (!trainedWeeks.has(currentWeekMon) && !trainedWeeks.has(prevWeekMon)) return 0;
+  const weeks = Array.from(trainedWeeks).sort().reverse();
   let streak = 0;
-  let lastTraining = null;
-  for (let i = dates.length - 1; i >= 0; i--) {
-    const d = dates[i];
-    if (lastTraining === null) {
-      const daysSince = Math.round((new Date(today + "T12:00:00") - new Date(d + "T12:00:00")) / 864e5);
-      if (daysSince >= 7) return 0;
+  let expectedMon = currentWeekMon;
+  for (const w of weeks) {
+    if (w === expectedMon) {
       streak++;
-      lastTraining = d;
-    } else {
-      const gap = Math.round((new Date(lastTraining + "T12:00:00") - new Date(d + "T12:00:00")) / 864e5);
-      if (gap >= 7) break;
-      streak++;
-      lastTraining = d;
+      const dt = new Date(expectedMon + "T12:00:00");
+      dt.setDate(dt.getDate() - 7);
+      expectedMon = dt.toISOString().split("T")[0];
+    } else if (w < expectedMon) {
+      break;
     }
   }
   return streak;
@@ -1328,9 +1335,10 @@ const streakLost = (completed) => {
   const dates = Object.keys(completed).filter(d => !!completed[d]).sort();
   if (!dates.length) return false;
   const today = todayStr();
-  const last = dates[dates.length - 1];
-  const daysSince = Math.round((new Date(today + "T12:00:00") - new Date(last + "T12:00:00")) / 864e5);
-  return daysSince >= 7;
+  const currentWeekMon = getMonday(today);
+  const prevWeekMon = (() => { const dt = new Date(currentWeekMon + "T12:00:00"); dt.setDate(dt.getDate() - 7); return dt.toISOString().split("T")[0]; })();
+  const trainedWeeks = new Set(dates.map(d => getMonday(d)));
+  return !trainedWeeks.has(currentWeekMon) && !trainedWeeks.has(prevWeekMon);
 };
 function StreakModal({ t, S, completed, cu, onClose }) {
   const streak = calcStreak(completed);
