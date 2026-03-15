@@ -1303,20 +1303,34 @@ function ProfileModal({ t, S, cu, level, li, xpProg, xp, onClose, onDeleted, onU
 
 }
 const calcStreak = (completed) => {
-  let s = 0;
-  const todayDone = !!completed[todayStr()];
-  const start = todayDone ? 0 : 1;
-  for (let i = start; i < 365; i++) {
-    if (completed[daysAgo(i)]) s++;
-    else break;
+  const dates = Object.keys(completed).filter(d => !!completed[d]).sort();
+  if (!dates.length) return 0;
+  const today = todayStr();
+  let streak = 0;
+  let lastTraining = null;
+  for (let i = dates.length - 1; i >= 0; i--) {
+    const d = dates[i];
+    if (lastTraining === null) {
+      const daysSince = Math.round((new Date(today + "T12:00:00") - new Date(d + "T12:00:00")) / 864e5);
+      if (daysSince >= 7) return 0;
+      streak++;
+      lastTraining = d;
+    } else {
+      const gap = Math.round((new Date(lastTraining + "T12:00:00") - new Date(d + "T12:00:00")) / 864e5);
+      if (gap >= 7) break;
+      streak++;
+      lastTraining = d;
+    }
   }
-  return s;
+  return streak;
 };
 const streakLost = (completed) => {
-  for (let i = 0; i <= 7; i++) {
-    if (completed[daysAgo(i)]) return false;
-  }
-  return true;
+  const dates = Object.keys(completed).filter(d => !!completed[d]).sort();
+  if (!dates.length) return false;
+  const today = todayStr();
+  const last = dates[dates.length - 1];
+  const daysSince = Math.round((new Date(today + "T12:00:00") - new Date(last + "T12:00:00")) / 864e5);
+  return daysSince >= 7;
 };
 function StreakModal({ t, S, completed, cu, onClose }) {
   const streak = calcStreak(completed);
