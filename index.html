@@ -103,6 +103,35 @@ rect.recharts-rectangle[class*="background"]{fill:transparent!important;opacity:
       messagingSenderId: "707061987447",
       appId: "1:707061987447:web:98090f88d8301ade8f6e72"
     };
+    /*
+    FIRESTORE SECURITY RULES (paste in Firebase Console → Firestore → Rules):
+    ============================================================================
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /usernames/{username} {
+          allow read: if request.auth != null;
+          allow write: if request.auth != null
+            && (
+              !exists(/databases/$(database)/documents/usernames/$(username))
+              || get(/databases/$(database)/documents/usernames/$(username)).data.uid == request.auth.uid
+            );
+        }
+        match /users/{userId} {
+          allow read: if request.auth != null;
+          allow write: if request.auth != null && request.auth.uid == userId;
+          match /data/{key} {
+            allow read: if request.auth != null;
+            allow write: if request.auth != null && request.auth.uid == userId;
+          }
+        }
+        match /friendRequests/{docId} {
+          allow read, write: if request.auth != null;
+        }
+      }
+    }
+    ============================================================================
+    */
     firebase.initializeApp(firebaseConfig);
     // Make Firebase available globally for the app
     window._fbAuthInst = firebase.auth();
@@ -1302,31 +1331,52 @@ function ProfileModal({ t, S, cu, level, li, xpProg, xp, onClose, onDeleted, onU
 
 
 }
-const getMonday = (d) => {
+// Returns ISO week number (Mon=start) for a date string
+const getISOWeek = (d) => {
   const dt = new Date(d + "T12:00:00");
-  const day = dt.getDay();
-  dt.setDate(dt.getDate() + (day === 0 ? -6 : 1 - day));
-  return dt.toISOString().split("T")[0];
+  const day = dt.getDay() || 7; // Mon=1 ... Sun=7
+  dt.setDate(dt.getDate() + 4 - day);
+  const yearStart = new Date(dt.getFullYear(), 0, 1);
+  return [dt.getFullYear(), Math.ceil((((dt - yearStart) / 864e5) + 1) / 7)];
+};
+const weekKey = (d) => { const [y, w] = getISOWeek(d); return `${y}-W${String(w).padStart(2,"0")}`; };
+const prevWeekKey = (wk) => {
+  const [y, w] = wk.split("-W").map(Number);
+  if (w === 1) return `${y - 1}-W${String(getISOWeek(`${y - 1}-12-28`)[1]).padStart(2,"0")}`;
+  return `${y}-W${String(w - 1).padStart(2,"0")}`;
 };
 const calcStreak = (completed) => {
   const dates = Object.keys(completed).filter(d => !!completed[d]).sort();
   if (!dates.length) return 0;
   const today = todayStr();
-  const currentWeekMon = getMonday(today);
-  const prevWeekMon = (() => { const dt = new Date(currentWeekMon + "T12:00:00"); dt.setDate(dt.getDate() - 7); return dt.toISOString().split("T")[0]; })();
-  const trainedWeeks = new Set(dates.map(d => getMonday(d)));
-  if (!trainedWeeks.has(currentWeekMon) && !trainedWeeks.has(prevWeekMon)) return 0;
-  const weeks = Array.from(trainedWeeks).sort().reverse();
+  const currentWk = weekKey(today);
+  const lastDate = dates[dates.length - 1];
+  const lastWk = weekKey(lastDate);
+  // Streak is lost if last training was not in current or previous week
+  const prevWk = prevWeekKey(currentWk);
+  if (lastWk !== currentWk && lastWk !== prevWk) return 0;
+  // Build set of trained weeks
+  const trainedWeeks = new Set(dates.map(d => weekKey(d)));
+  // Walk backwards through training days, stop when we hit a week with no training
   let streak = 0;
-  let expectedMon = currentWeekMon;
-  for (const w of weeks) {
-    if (w === expectedMon) {
-      streak++;
-      const dt = new Date(expectedMon + "T12:00:00");
-      dt.setDate(dt.getDate() - 7);
-      expectedMon = dt.toISOString().split("T")[0];
-    } else if (w < expectedMon) {
-      break;
+  let checkedWk = currentWk;
+  for (let i = dates.length - 1; i >= 0; i--) {
+    const d = dates[i];
+    const dWk = weekKey(d);
+    // Skip forward weeks (future dates)
+    if (dWk > currentWk) continue;
+    // If we jumped past a week that had no training → stop
+    while (checkedWk > dWk) {
+      const prev = prevWeekKey(checkedWk);
+      if (checkedWk !== currentWk && !trainedWeeks.has(checkedWk)) { return streak; }
+      checkedWk = prev;
+    }
+    streak++;
+    if (i > 0) {
+      // Move checkedWk back if we cross a week boundary
+      const prevD = dates[i - 1];
+      const prevDWk = weekKey(prevD);
+      if (prevDWk < dWk) checkedWk = prevWeekKey(dWk);
     }
   }
   return streak;
@@ -1335,10 +1385,10 @@ const streakLost = (completed) => {
   const dates = Object.keys(completed).filter(d => !!completed[d]).sort();
   if (!dates.length) return false;
   const today = todayStr();
-  const currentWeekMon = getMonday(today);
-  const prevWeekMon = (() => { const dt = new Date(currentWeekMon + "T12:00:00"); dt.setDate(dt.getDate() - 7); return dt.toISOString().split("T")[0]; })();
-  const trainedWeeks = new Set(dates.map(d => getMonday(d)));
-  return !trainedWeeks.has(currentWeekMon) && !trainedWeeks.has(prevWeekMon);
+  const currentWk = weekKey(today);
+  const prevWk = prevWeekKey(currentWk);
+  const lastWk = weekKey(dates[dates.length - 1]);
+  return lastWk !== currentWk && lastWk !== prevWk;
 };
 function StreakModal({ t, S, completed, cu, onClose }) {
   const streak = calcStreak(completed);
@@ -1376,7 +1426,7 @@ function StreakModal({ t, S, completed, cu, onClose }) {
     return days;
   }, [viewYear, viewMonth, completed]);
   const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString("de-CH", { month: "long", year: "numeric" });
-  return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 320, bg: "rgba(0,0,0,.58)", style: { background: t.card, padding: 24, maxHeight: "92vh", animation: "sheetUp .34s cubic-bezier(.32,.72,0,1)" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: t.text } }, "\u{1F525} Streak"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 22, color: t.muted }))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "16px 0 20px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 72, lineHeight: 1, animation: streak > 0 ? "popBeat 2.4s ease infinite" : "none" } }, "\u{1F525}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 56, fontWeight: 900, color: "#f97316", lineHeight: 1.1, marginTop: 8 } }, streak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: t.muted, marginTop: 4, fontWeight: 600 } }, "Tage am St\xFCck"), lost && streak === 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, background: "#ef444422", border: "1px solid #ef444433", borderRadius: 12, padding: "10px 16px", fontSize: 13, color: "#ef4444" } }, "\u26A0\uFE0F Streak verloren \u2013 7+ Tage ohne Training"), streak >= 3 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, fontSize: 12, color: "#f97316", fontWeight: 700 } }, streak >= 30 ? "\u{1F3C6} Legend\xE4r!" : streak >= 14 ? "\u2B50 Beeindruckend!" : streak >= 7 ? "\u{1F3AF} Starke Woche!" : "\u{1F4AA} Weiter so!")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 20 } }, [{ e: "\u{1F3CB}\uFE0F", v: totalDays, l: "Gesamt-Trainings" }, { e: "\u{1F525}", v: streak, l: "Aktueller Streak" }, { e: "\u{1F4C5}", v: Object.keys(completed).filter((d) => d.startsWith((/* @__PURE__ */ new Date()).getFullYear())).length, l: "Dieses Jahr" }].map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { flex: 1, background: t.card2, borderRadius: 13, padding: "11px 6px", border: `1px solid ${t.border}`, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18 } }, s.e), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900, color: t.a, lineHeight: 1.1, marginTop: 2 } }, s.v), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: t.muted, marginTop: 2, lineHeight: 1.3 } }, s.l)))), /* @__PURE__ */ React.createElement("div", { style: { background: t.card2, borderRadius: 16, padding: 16, border: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: goBack, style: { background: t.card, border: `1px solid ${t.border}`, cursor: "pointer", padding: "6px 12px", borderRadius: 10, color: t.text, display: "flex", alignItems: "center" } }, /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("polyline", { points: "15 18 9 12 15 6" }))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: t.text, textTransform: "capitalize" } }, monthLabel), /* @__PURE__ */ React.createElement("button", { onClick: goFwd, disabled: isCurrentMonth, style: { background: t.card, border: `1px solid ${t.border}`, cursor: isCurrentMonth ? "default" : "pointer", padding: "6px 12px", borderRadius: 10, color: t.text, display: "flex", alignItems: "center", opacity: isCurrentMonth ? 0.3 : 1 } }, /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("polyline", { points: "9 18 15 12 9 6" })))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 } }, ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((d) => /* @__PURE__ */ React.createElement("div", { key: d, style: { fontSize: 10, color: t.muted, textAlign: "center", fontWeight: 700, paddingBottom: 5 } }, d)), calDays.map(
+  return /* @__PURE__ */ React.createElement(SwipeSheet, { onClose, zIndex: 320, bg: "rgba(0,0,0,.58)", style: { background: t.card, padding: 24, maxHeight: "92vh", animation: "sheetUp .34s cubic-bezier(.32,.72,0,1)" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: t.text } }, "\u{1F525} Streak"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", cursor: "pointer" } }, /* @__PURE__ */ React.createElement(Icon, { name: "x", size: 22, color: t.muted }))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "16px 0 20px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 72, lineHeight: 1, animation: streak > 0 ? "popBeat 2.4s ease infinite" : "none" } }, "\u{1F525}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 56, fontWeight: 900, color: "#f97316", lineHeight: 1.1, marginTop: 8 } }, streak), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: t.muted, marginTop: 4, fontWeight: 600 } }, "Tage am St\xFCck"), lost && streak === 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, background: "#ef444422", border: "1px solid #ef444433", borderRadius: 12, padding: "10px 16px", fontSize: 13, color: "#ef4444" } }, "\u26A0\uFE0F Streak verloren \u2013 7 Tage kein Training"), streak >= 3 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, fontSize: 12, color: "#f97316", fontWeight: 700 } }, streak >= 30 ? "\u{1F3C6} Legend\xE4r!" : streak >= 14 ? "\u2B50 Beeindruckend!" : streak >= 7 ? "\u{1F3AF} Starke Woche!" : "\u{1F4AA} Weiter so!")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 20 } }, [{ e: "\u{1F3CB}\uFE0F", v: totalDays, l: "Gesamt-Trainings" }, { e: "\u{1F525}", v: streak, l: "Aktueller Streak" }, { e: "\u{1F4C5}", v: Object.keys(completed).filter((d) => d.startsWith((/* @__PURE__ */ new Date()).getFullYear())).length, l: "Dieses Jahr" }].map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { flex: 1, background: t.card2, borderRadius: 13, padding: "11px 6px", border: `1px solid ${t.border}`, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18 } }, s.e), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 900, color: t.a, lineHeight: 1.1, marginTop: 2 } }, s.v), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: t.muted, marginTop: 2, lineHeight: 1.3 } }, s.l)))), /* @__PURE__ */ React.createElement("div", { style: { background: t.card2, borderRadius: 16, padding: 16, border: `1px solid ${t.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: goBack, style: { background: t.card, border: `1px solid ${t.border}`, cursor: "pointer", padding: "6px 12px", borderRadius: 10, color: t.text, display: "flex", alignItems: "center" } }, /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("polyline", { points: "15 18 9 12 15 6" }))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: t.text, textTransform: "capitalize" } }, monthLabel), /* @__PURE__ */ React.createElement("button", { onClick: goFwd, disabled: isCurrentMonth, style: { background: t.card, border: `1px solid ${t.border}`, cursor: isCurrentMonth ? "default" : "pointer", padding: "6px 12px", borderRadius: 10, color: t.text, display: "flex", alignItems: "center", opacity: isCurrentMonth ? 0.3 : 1 } }, /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("polyline", { points: "9 18 15 12 9 6" })))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 } }, ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((d) => /* @__PURE__ */ React.createElement("div", { key: d, style: { fontSize: 10, color: t.muted, textAlign: "center", fontWeight: 700, paddingBottom: 5 } }, d)), calDays.map(
     (d, i) => d === null ? /* @__PURE__ */ React.createElement("div", { key: i }) : /* @__PURE__ */ React.createElement("div", { key: i, style: { aspectRatio: "1", borderRadius: 8, background: d.done ? "#22c55e22" : d.isToday ? t.a + "22" : t.bg, border: d.done ? `2px solid #22c55e` : d.isToday ? `2px solid ${t.a}` : `1px solid ${t.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: d.done || d.isToday ? 800 : 400, color: d.done ? "#22c55e" : d.isToday ? t.a : d.future ? t.border : t.muted } }, d.done ? "\u2713" : d.day)
   )))));
 }
@@ -2080,7 +2130,7 @@ function HomeTab({ t, S, cw, todayDone, markDone, level, li, xpProg, onSets, onP
       },
       onClose: () => setShowWkEdit(false)
     }
-  ), /* @__PURE__ */ React.createElement("button", { onClick: onShowStreak, style: { display: "block", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 12, textAlign: "left" } }, /* @__PURE__ */ React.createElement("div", { style: __spreadProps(__spreadValues({}, S.card), { display: "flex", gap: 14, alignItems: "center", marginBottom: 0, background: `linear-gradient(135deg,#f9731610,${t.card})`, border: "1px solid #f9731628" }) }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 44, animation: streak > 0 ? "popBeat 2.5s ease infinite" : "none", lineHeight: 1 } }, "\u{1F525}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#f97316", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 2 } }, "Aktueller Streak"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 30, fontWeight: 900, color: "#f97316", lineHeight: 1 } }, streak, " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: t.muted, fontWeight: 600 } }, "Tage")), streak === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, marginTop: 2 } }, "Trainiere heute f\xFCr deinen ersten Streak!"), streak > 0 && streak < 7 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#f97316bb", marginTop: 2 } }, "Noch ", 7 - streak, " bis zur Woche \u{1F3AF}"), streak >= 7 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#f97316bb", marginTop: 2 } }, streak >= 30 ? "\u{1F3C6} Legend\xE4r!" : streak >= 14 ? "\u2B50 Beeindruckend!" : "\u{1F4AA} Starke Leistung!")), /* @__PURE__ */ React.createElement(Icon, { name: "chevDn", size: 18, color: t.muted }))), /* @__PURE__ */ React.createElement("button", { onClick: onShowStreak, style: { display: "block", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 12, textAlign: "left" } }, /* @__PURE__ */ React.createElement("div", { style: __spreadProps(__spreadValues({}, S.card), { marginBottom: 0 }) }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 800 } }, "\u{1F5D3} Diese Woche"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: t.muted } }, weekDone, "/7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, marginBottom: 10 } }, weekData.map((w, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: w.isToday ? 800 : 500, color: w.isToday ? t.a : t.muted } }, w.d), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", aspectRatio: "1", maxWidth: 36, borderRadius: 10, background: w.done ? "#22c55e" : w.isToday ? t.a + "28" : t.card2, border: w.isToday ? `2px solid ${t.a}` : w.done ? "2px solid #22c55e44" : "2px solid transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, transition: "all .2s" } }, w.done ? "\u2713" : w.isToday ? "\xB7" : "")))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: 700, color: t.muted, marginBottom: 5, textTransform: "uppercase", letterSpacing: ".05em" } }, "Letzte 21 Tage \u2192 Kalender"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3 } }, Array.from({ length: 21 }, (_, i) => 20 - i).map((i) => {
+  ), /* @__PURE__ */ React.createElement("button", { onClick: onShowStreak, style: { display: "block", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 12, textAlign: "left" } }, /* @__PURE__ */ React.createElement("div", { style: __spreadProps(__spreadValues({}, S.card), { display: "flex", gap: 14, alignItems: "center", marginBottom: 0, background: `linear-gradient(135deg,#f9731610,${t.card})`, border: "1px solid #f9731628" }) }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 44, animation: streak > 0 ? "popBeat 2.5s ease infinite" : "none", lineHeight: 1 } }, "\u{1F525}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#f97316", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 2 } }, "Aktueller Streak"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 30, fontWeight: 900, color: "#f97316", lineHeight: 1 } }, streak, " ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: t.muted, fontWeight: 600 } }, "Tage")), streak === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: t.muted, marginTop: 2 } }, "Trainiere heute f\xFCr deinen ersten Streak!"), streak > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#f97316bb", marginTop: 2 } }, streak === 1 ? "Nächste Woche trainieren für Streak 2! 💪" : "Weiter so! Diese Woche trainieren \u{1F525}"), streak >= 7 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#f97316bb", marginTop: 2 } }, streak >= 30 ? "\u{1F3C6} Legend\xE4r!" : streak >= 14 ? "\u2B50 Beeindruckend!" : "\u{1F4AA} Starke Leistung!")), /* @__PURE__ */ React.createElement(Icon, { name: "chevDn", size: 18, color: t.muted }))), /* @__PURE__ */ React.createElement("button", { onClick: onShowStreak, style: { display: "block", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 12, textAlign: "left" } }, /* @__PURE__ */ React.createElement("div", { style: __spreadProps(__spreadValues({}, S.card), { marginBottom: 0 }) }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 800 } }, "\u{1F5D3} Diese Woche"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: t.muted } }, weekDone, "/7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, marginBottom: 10 } }, weekData.map((w, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: w.isToday ? 800 : 500, color: w.isToday ? t.a : t.muted } }, w.d), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", aspectRatio: "1", maxWidth: 36, borderRadius: 10, background: w.done ? "#22c55e" : w.isToday ? t.a + "28" : t.card2, border: w.isToday ? `2px solid ${t.a}` : w.done ? "2px solid #22c55e44" : "2px solid transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, transition: "all .2s" } }, w.done ? "\u2713" : w.isToday ? "\xB7" : "")))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, fontWeight: 700, color: t.muted, marginBottom: 5, textTransform: "uppercase", letterSpacing: ".05em" } }, "Letzte 21 Tage \u2192 Kalender"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3 } }, Array.from({ length: 21 }, (_, i) => 20 - i).map((i) => {
     const ds = daysAgo(i);
     const done = !!completed[ds];
     const isToday = i === 0;
